@@ -18,10 +18,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "FS-Enhancer-Extreme"
 include(
-    ":fseea",
-    ":fseec",
-    ":fsees",
-    ":fseeu",
+    ":fseeb",
+    ":fseep",
     ":fseew",
     ":module"
 )

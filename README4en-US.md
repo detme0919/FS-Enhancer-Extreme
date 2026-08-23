@@ -8,7 +8,7 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 > This module **specializes** in disguising the bootloader status, **rather than** passed Play Integrity.
 
 ## Requirements
-- Installed the [ForgeStore](https://github.com/TheGeniusClub/ForgeStore), or [TrickyStore](https://github.com/5ec1cff/TrickyStore), or [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS) or its branch [TEESimulator](https://github.com/JingMatrix/TEESimulator) or its branch [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS) module
+- Installed the [ForgeStore](https://github.com/raana-labs/ForgeStore), or [TrickyStore](https://github.com/5ec1cff/TrickyStore), or [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS) or its branch [TEESimulator(<= 3.2)](https://github.com/JingMatrix/TEESimulator) or its branch [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS) module
 - The mounted system is not OverlayFS
 
 ## Install
@@ -92,7 +92,8 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 - Execute in the terminal `./gradlew zip`
 
 ## Acknowledgement
-- [fluentui](https://github.com/microsoft/fluentui)
+- [Fluent 2](https://storybooks.fluentui.dev/web-components)
+  - webui Design System Library
 - [APatch](https://github.com/bmax121/APatch)
   - fseec `cli.rs` References
 - [NeoZygisk](https://github.com/JingMatrix/NeoZygisk)
@@ -102,7 +103,8 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 - [Android-Open-Source-Project](https://cs.android.com/android/platform/superproject)
   - fseec `fn pidof` References
 
-## Project address (for users downloading from sources other than GitHub to trace back from this README)
+## Other
+### Project address (For users downloading from sources other than GitHub to trace back from this README)
 - https://github.com/XtrLumen/FS-Enhancer-Extreme
 
-## Just for fun!
+### Just for fun

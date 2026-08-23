@@ -14,6 +14,6 @@
 #
 
 cd "${0%/*}"
-source "./script/util_functions.sh"
+source './script/util_functions.sh'
 
 fseec startwebui

@@ -34,7 +34,7 @@ extract() {
                     abort_cn "${file} 被篡改!"
                     abort_en "Failed to verify ${file}"
                 }
-            elif [[ ! "${args}" == *"-s"* ]]
+            elif [[ ! "${args}" == *'-s'* ]]
             then
                 abort_cn "${file}.sha256 不存在!"
                 abort_en "${file}.sha256 not exists"
@@ -43,7 +43,7 @@ extract() {
             abort_cn "${file} 不存在!"
             abort_en "${file} not exists"
         fi
-        [[ "${args}" == *"-q"* ]] || {
+        [[ "${args}" == *'-q'* ]] || {
             print_cn "- 已验证 ${file}"
             print_en "- Verified ${file}"
         }

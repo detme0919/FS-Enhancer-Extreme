@@ -14,23 +14,23 @@
 #
 
 cd "${0%/*}"
-source "./script/util_functions.sh"
+source './script/util_functions.sh'
 rm -rf "${OLDLOG}"
 mv -f "${LOGDIR}" "${OLDLOG}"
 mkdir -p "${LOGDIR}"
 touch "${FSEELOG}"
-logI "完成日志轮换"
+logI '完成日志轮换'
 
 [ -x "${ADB}/service.d/.fsee_state.sh" ] || {
-    logI "配置描述文件刷新脚本"
+    logI '配置描述文件刷新脚本'
     mkdir -p "${ADB}/service.d"
     cp -f "${FSEEMODDIR}/script/state.sh" "${ADB}/service.d/.fsee_state.sh"
     chmod +x "${ADB}/service.d/.fsee_state.sh"
 }
 
-logI "收集运行环境"
+logI '收集运行环境'
 invoke envcollect
 envcheck
 
-logI "处理冲突模块"
+logI '处理冲突模块'
 invoke modcheck

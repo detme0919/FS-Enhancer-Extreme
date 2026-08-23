@@ -1,5 +1,5 @@
 # Forge Store Enhancer Extreme
-ForgeStore增强器,极致隐藏由解锁引导加载程序产生的检测点.
+ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 
 > [!TIP]  
 > 「[English](README4en-US.md)」
@@ -8,7 +8,7 @@ ForgeStore增强器,极致隐藏由解锁引导加载程序产生的检测点.
 > 本模块**专精**伪装引导加载程序状态，**而非**通过PlayIntegrity。
 
 ## 条件
-- 已安装 [ForgeStore](https://github.com/TheGeniusClub/ForgeStore)，或 [TrickyStore](https://github.com/5ec1cff/TrickyStore)，或 [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS) 或它的分支 [TEESimulator](https://github.com/JingMatrix/TEESimulator) 或它的分支 [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS) 模块
+- 已安装 [ForgeStore](https://github.com/raana-labs/ForgeStore)，或 [TrickyStore](https://github.com/5ec1cff/TrickyStore)，或 [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS) 或它的分支 [TEESimulator(<= 3.2)](https://github.com/JingMatrix/TEESimulator) 或它的分支 [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS) 模块
 - 挂载系统不是 OverlayFS
 
 ## 安装
@@ -92,8 +92,8 @@ ForgeStore增强器,极致隐藏由解锁引导加载程序产生的检测点.
 - 于终端执行 `./gradlew zip`
 
 ## 致谢
-- [fluentui](https://github.com/microsoft/fluentui)
-  - webui 使用的设计语言
+- [Fluent 2](https://storybooks.fluentui.dev/web-components)
+  - webui 设计系统库
 - [APatch](https://github.com/bmax121/APatch)
   - fseec `cli.rs` 参考来源
 - [NeoZygisk](https://github.com/JingMatrix/NeoZygisk)
@@ -103,7 +103,8 @@ ForgeStore增强器,极致隐藏由解锁引导加载程序产生的检测点.
 - [Android-Open-Source-Project](https://cs.android.com/android/platform/superproject)
   - fseec `fn pidof` 参考来源
 
-## 本项目地址(用于非Github下载的用户从本自述文件溯源)
+## 其他
+### 本项目地址(用于非Github下载的用户从本自述文件溯源)
 - https://github.com/XtrLumen/FS-Enhancer-Extreme
 
-## Just for fun
+### Just for fun

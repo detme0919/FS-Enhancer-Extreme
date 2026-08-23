@@ -13,35 +13,29 @@ val verHash by extra(
     }.standardOutput.asText.get().trim()
 )
 
-tasks.register<Exec>("clean") {
+val fseeb = project(":fseeb")
+fseeb.tasks.register<Exec>("clean") {
     group = "rust"
 
-    workingDir(projectDir)
     executable("cargo")
     args("clean")
 }
 listOf(
-    project(":fseec"),
-    project(":fsees"),
-    project(":fseeu")
-).forEach { project ->
-    listOf(
-        "debug",
-        "release"
-    ).forEach { variantName ->
-        val variantCapped = variantName.replaceFirstChar {
-            if (it.isLowerCase()) it.titlecase() else it.toString()
-        }
-        val variantLowered = variantName.lowercase()
+    "debug",
+    "release"
+).forEach {
+    val variantCapped = it.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase() else it.toString()
+    }
+    val variantLowered = it.lowercase()
 
-        project.tasks.register<Exec>("build${variantCapped}") {
-            group = "rust"
+    fseeb.tasks.register<Exec>("build${variantCapped}") {
+        group = "rust"
 
-            environment("CARGO_TERM_COLOR", "always")
-            executable("cargo").args("ndk", "build", "--target", "aarch64-linux-android")
-            if (variantLowered == "release") {
-                args("--release")
-            }
+        environment("CARGO_TERM_COLOR", "always")
+        executable("cargo").args("ndk", "--", "build", "--target", "aarch64-linux-android")
+        if (variantLowered == "release") {
+            args("--release")
         }
     }
 }
@@ -55,11 +49,11 @@ fseew.tasks.register<Delete>("clean") {
 listOf(
     "debug",
     "release"
-).forEach { variantName ->
-    val variantCapped = variantName.replaceFirstChar {
+).forEach {
+    val variantCapped = it.replaceFirstChar {
         if (it.isLowerCase()) it.titlecase() else it.toString()
     }
-    val variantLowered = variantName.lowercase()
+    val variantLowered = it.lowercase()
 
     fseew.tasks.register<Exec>("build${variantCapped}") {
         group = "web"

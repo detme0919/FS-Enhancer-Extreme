@@ -1,36 +1,38 @@
 #!/bin/zsh
 
-[ ${#} -eq 0 ] && echo "No arguments" && exit 2
+[ ${#} -eq 0 ] && echo 'No arguments' && exit 2
 
 cd "${0%/*}"
 
 invalid() {
-    echo "Invalid arguments"
+    echo 'Invalid arguments'
     exit 1
 }
 
 root() {
-    adb shell su -c "${@}"
+    adb shell su -c ${@}
 }
 
 user() {
-    adb shell "${@}"
+    adb shell ${@}
 }
 
 push() {
-    adb push "${@}"
+    adb push ${@}
 }
 
 rs_clean() {
     cargo clean
 }
 
-rs_build() (
+rs_build() {
     echo -e "    \e[1m\e[4mBuild ${TARGET}\e[0m\n"
-    cd "${TARGET}"
-    ${1} && local variant="--release"
-    cargo ndk build --target aarch64-linux-android ${variant}
-)
+    (
+        cd "./${TARGET}"
+        ${1} && local variant='--release'
+        cargo ndk -- build --target aarch64-linux-android ${variant}
+    )
+}
 
 rs_push() {
     rs_build ${1} && \
@@ -39,16 +41,16 @@ rs_push() {
         local variant=release
     else
         local variant=debug
-    fi
-    push "./target/aarch64-linux-android/${variant}/fseec" "/data/local/tmp"
+    fi && \
+    push "./target/aarch64-linux-android/${variant}/fseec" /data/local/tmp
 }
 
 rs_exe() {
-    root "/data/local/tmp/fseec" "${@}"
+    root /data/local/tmp/fseec ${@}
 }
 
 web_clean() {
-    rm -rf "./dist"
+    rm -rf './dist'
 }
 
 web_build() {
@@ -69,14 +71,14 @@ web_push() {
     local tmp=/data/local/tmp/src
     web_build ${1} && \
     root rm -rf ${tmp} ${FSEEMODDIR}/webroot && \
-    push "./dist" ${tmp} && \
+    push './dist' ${tmp} && \
     root mv -f ${tmp} ${FSEEMODDIR}/webroot
 }
 
 web_test() {
     local pkgs=(
-        "com.dergoogler.mmrl.wx" 
-        "io.github.a13e300.ksuwebui"
+        'com.dergoogler.mmrl.wx' 
+        'io.github.a13e300.ksuwebui'
     )
     web_push ${1} && \
     for pkg in "${pkgs[@]}"
@@ -90,13 +92,11 @@ web_test() {
 case ${1} in
     rs)
         shift
+        cd './fseeb'
         TARGET=fseec
         case ${2} in
-            fsees)
-                TARGET=fsees
-                ;;
-            fseeu)
-                TARGET=fseeu                
+            fsees|fseeu)
+                TARGET=${2}
         esac
         case ${1} in
             buildRelease)
@@ -113,15 +113,15 @@ case ${1} in
                 ;;
             testRelease)
                 shift
-                rs_push true && rs_exe "${@}"
+                rs_push true && rs_exe ${@}
                 ;;
             test)
                 shift
-                rs_push false && rs_exe "${@}"
+                rs_push false && rs_exe ${@}
                 ;;
             exe)
                 shift
-                rs_exe "${@}"
+                rs_exe ${@}
                 ;;
             clean)
                 rs_clean
@@ -130,9 +130,43 @@ case ${1} in
                 invalid
         esac
         ;;
+    dev)
+        shift
+        case ${1} in
+            bn)
+                case ${2} in
+                    on)
+                        BN=2048
+                        ;;
+                    off)
+                        BN=0
+                        ;;
+                    *)
+                        invalid
+                esac
+                root "echo ${BN} \> /sys/class/backlight/panel0-backlight/brightness"
+                ;;
+            ratio)
+                case ${2} in
+                    pad)
+                        user wm size 2032x3048
+                        user wm density 408
+                        ;;
+                    reset)
+                        user wm size reset
+                        user wm density reset
+                        ;;
+                    *)
+                        invalid
+                esac
+                ;;
+            *)
+                invalid
+        esac
+        ;;
     web)
         shift
-        cd "./fseew"
+        cd './fseew'
         case ${1} in
             buildRelease)
                 web_build true
@@ -152,6 +186,10 @@ case ${1} in
             test)
                 web_test false
                 ;;
+            exe)
+                shift
+                ${@}
+                ;;
             clean)
                 web_clean
                 ;;
@@ -159,9 +197,14 @@ case ${1} in
                 invalid
         esac
         ;;
+    tp)
+        pkill -f 'scrcpy'
+        ~/Desktop/SCRCPY >/dev/null 2>&1 &
+        ;;
     clean)
-        rs_clean
-        web_clean
+        (cd './fseeb' && rs_clean)
+        (cd './fseew' && web_clean)
+        rm -rf './.gradle'
         ;;
     *)
         invalid

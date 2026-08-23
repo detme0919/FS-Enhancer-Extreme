@@ -1,0 +1,185 @@
+/*
+ * This file is part of FS-Enhancer-Extreme.
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program;
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) 2026 XtrLumen
+ */
+
+use crate::{
+    define::{
+        FSEEMODDIR,
+        FSEECONFIG,
+        MAIN_MODULE_ENV_FILE,
+        MAIN_MODULE_IDENTITY
+    },
+    util_functions::{
+        resetprop,
+        getprop,
+        pm_install,
+        pm_uninstall,
+        write,
+        read_to_string,
+        read_version_integer,
+        delete_file
+    },
+    bridge::log
+};
+
+use std::{
+    process,
+    path::Path
+};
+
+fn get_vbhash() -> String {
+    getprop("ro.boot.vbmeta.digest")
+}
+
+fn set_vbhash(value: &str) -> anyhow::Result<()> {
+    resetprop(&["-n", "ro.boot.vbmeta.digest", value])
+}
+
+pub fn entry() -> anyhow::Result<()> {
+    let persist_hash_full_path: String = format!("{}/verifiedboothash", FSEECONFIG);
+
+    let write_persist_hash = |data: String| {
+        write(&persist_hash_full_path, data, true)
+    };
+
+    let now_vbhash: String = get_vbhash();
+
+    let contentapp = |cache: bool| -> bool {
+        log::info("安装服务");
+        if pm_install(format!("{}/provider.apk", FSEEMODDIR)) {
+            log::info("安装完毕");
+            log::info("尝试启动");
+            let content_result = process::Command::new("content").args(&["call", "--uri", "content://VBMetaProvider", "--method", "GET", "--extra", "field:s:verifiedBootHash"])
+                .output();
+            let new_vbhash: Option<String> = match content_result {
+                Ok(output) => {
+                    let content_stdout = String::from_utf8(output.stdout).unwrap().trim().to_string();
+                    log::info(&content_stdout);
+                    let marker: &str = "=verifiedBootHash";
+                    if content_stdout.contains(marker) {
+                        let value = content_stdout.split(marker).next().unwrap();
+                        Some(value[value.len() - 64..].to_string())
+                    } else {
+                        None
+                    }
+                }
+                Err(error) => {
+                    log::error(&format!("content执行失败: {}", error));
+                    None
+                }
+            };
+            let is_success: bool = if let Some(result) = new_vbhash {
+                log::info("解析成功");
+                let is_success: bool = if result == now_vbhash {
+                    log::info("无需修正");
+                    true
+                } else {
+                    if result == now_vbhash {
+                        if set_vbhash(&result).is_ok() {
+                            log::info("修正完毕");
+                            true
+                        } else {
+                            log::error("修正失败");
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                };
+                if cache {
+                    log::info("缓存数据");
+                    write_persist_hash(result);
+                }
+
+                is_success
+            } else {
+                log::error("解析失败");
+                log::error("抓取日志");
+                match process::Command::new("logcat").args(&["-d", "-s", "[FSEE]"]).output() {
+                    Ok(result) => {
+                        let stdout = String::from_utf8(result.stdout).unwrap();
+                        let filtered: String = stdout.lines().filter(|line|
+                            !line.contains("beginning of")
+                        ).intersperse("\n").collect();
+                        if !filtered.is_empty() {
+                            log::raw(&filtered);
+                        } else {
+                            log::error("抓取失败");
+                        }
+                    }
+                    Err(error) => log::error(&format!("执行失败: {}", error))
+                }
+
+                false
+            };
+            log::info("卸载服务");
+            pm_uninstall("io.github.xtrlumen.vbmeta");
+
+            is_success
+        } else {
+            false
+        }
+    };
+
+    let err_apply_random_vbhash = || {
+        if !contentapp(true) {
+            log::warn("获取失败, 生成随机哈希值作为VerifiedBootHash并缓存数据");
+            let mut buffer = [0u8; 32];
+            if let Err(error) = getrandom::fill(&mut buffer) {
+                log::error(&format!("getrandom调用失败: {}", error));
+                return;
+            } else {
+                let hash = buffer.iter().map(|byte|
+                    format!("{:02x}", byte)
+                ).collect::<String>();
+
+                if set_vbhash(&hash).is_ok() {
+                    log::info(&format!("重置完毕, 当前VerifiedBootHash: {}", get_vbhash()))
+                } else {
+                    log::error("重置失败")
+                }
+
+                write_persist_hash(hash);
+            }
+        }
+    };
+
+    if *MAIN_MODULE_IDENTITY == "TrickyStore" && read_version_integer(MAIN_MODULE_ENV_FILE) >= 245 {
+        let persist_hash_file = Path::new(&persist_hash_full_path);
+        if persist_hash_file.exists() {
+            if let Ok(success) = read_to_string(persist_hash_file) {
+                if now_vbhash == success {
+                    log::info("无需修正");
+                } else {
+                    if set_vbhash(&success).is_ok() {
+                        log::info(&format!("修正完毕, 当前VerifiedBootHash: {}", get_vbhash()))
+                    } else {
+                        log::error("修正失败")
+                    }
+                }
+            } else {
+                log::warn("缓存读取失败, 执行完整流程");
+                err_apply_random_vbhash()
+            }
+        } else {
+            log::warn("缓存文件缺失, 执行完整流程");
+            err_apply_random_vbhash();
+        }
+    } else {
+        delete_file(&persist_hash_full_path);
+        contentapp(false);
+    }
+
+    Ok(())
+}

@@ -22,105 +22,108 @@ ADB=/data/adb
 MODULESDIR=${ADB}/modules
 #TWO LEVEL#
 FSEECONFIG=${ADB}/fs_enhancer_extreme/config
-#CHECK ENVIRONMENT#
+#FUNCTIONS#
+SEPARATOR='***********************************************'
+IS_ZHCN=false
+#PRE PROCESS#
 MIN_RELEASE=10
-RELEASE=$(grep_get_prop ro.build.version.release)
-#PRINT INFORMATION#
-MODULE_VER="$(grep_prop version "${TMPDIR}/module.prop")"
+RELEASE=`grep_get_prop ro.build.version.release`
+MODULE_VER="`grep_prop version "${TMPDIR}/module.prop"`"
 #EXTRACT MODULE FILES#
-FILES="
+FILES='
 bin/*
 lib/*
 script/*
 webroot/*
 action.sh
 mistylake
-module.base
 module.prop
 post-fs-data.sh
 provider.apk
 service.sh
 uninstall.sh
-"
+'
+DESC_REBOOT='Need Reboot'
 #POST PROCESS#
 NES="
 ${MODPATH}/bin/fseec
 ${MODPATH}/bin/fsees
 ${ADB}/service.d/.fsee_state.sh
 "
-SYS="
+SYS='
 com.android.vending
 com.google.android.gsf
 com.google.android.gms
-"
-USR="
+'
+USR='
 me.bmax.apatch
 com.android.patch
 me.garfieldhan.apatch.next
-"
+'
 ##END##
 
 ##FUNCTIONS##
 separator_print() {
-    ui_print "***********************************************"
+    ui_print "${SEPARATOR}"
 }
 separator_abort() {
-    abort "***********************************************"
+    abort "${SEPARATOR}"
 }
-if [ ! -f "${FSEECONFIG}/english" ] && [[ "$(getprop persist.sys.locale)" == *"zh"* || "$(getprop ro.product.locale)" == *"zh"* ]]
-then
-    LOCALE="CN"
-else
-    LOCALE="EN"
-fi
+[ ! -f "${FSEECONFIG}/english" ] && [[ "`getprop persist.sys.locale`" == *'zh'* || "`getprop ro.product.locale`" == *'zh'* ]] && {
+    IS_ZHCN=true
+    DESC_REBOOT='需要重启'
+}
 operate() {
-    [ "${LOCALE}" = "${1}" ] && {
-        shift
-        local operation="${1}"
-        shift
-        case "${operation}" in
-            ui_print)
-                ui_print "${@}"
-                ;;
-            abort_verify)
-                separator_print
-                ui_print "! ${@}"
-                print_cn "! 这个ZIP文件已损坏,请重新下载"
-                print_en "! This zip may be corrupted, please try downloading again"
-                separator_abort
-                ;;
-        esac
-    }
+    if ${1}
+    then
+        ui_print "${2}"
+    else
+        separator_print
+        ui_print "! ${2}"
+        print_cn '! 这个ZIP文件已损坏, 请重新下载'
+        print_en '! This zip may be corrupted, please try downloading again'
+        separator_abort
+    fi
 }
 print_cn() {
-    operate "CN" "ui_print" "${@}"
+    ${IS_ZHCN} && operate true "${1}"
 }
 print_en() {
-    operate "EN" "ui_print" "${@}"
+    ${IS_ZHCN} || operate true "${1}"
 }
 abort_cn() {
-    operate "CN" "abort_verify" "${@}"
+    ${IS_ZHCN} && operate false "${1}"
 }
 abort_en() {
-    operate "EN" "abort_verify" "${@}"
+    ${IS_ZHCN} || operate false "${1}"
+}
+overlayfs_abort() {
+    separator_print
+    print_cn '! 不受支持的挂载系统 OverlayFS'
+    print_cn '! 由于冲突模块排除功能在此模式无法正常工作'
+    print_cn '! 请切换到 Magic Mount 挂载系统或元模块挂载系统后再次安装'
+    print_en '! Unsupported mount system: OverlayFS'
+    print_en '! Conflict module exclusion cannot work in this mode'
+    print_en '! Please switch to Magic Mount mount system or Meta Module mount system before installing again'
+    separator_abort
 }
 ##END##
 
 ##PRE PROCESS##
 #CHECK INTEGRITY#
-unzip -o "${ZIPFILE}" "verify.sh" -d "${TMPDIR}" >/dev/null
+unzip -o "${ZIPFILE}" 'verify.sh' -d "${TMPDIR}" >/dev/null
 [ -f "${TMPDIR}/verify.sh" ] || {
-    abort_cn "无法提取 verify.sh!"
-    abort_en "Unable to extract verify.sh"
+    abort_cn '无法提取 verify.sh!'
+    abort_en 'Unable to extract verify.sh'
 }
 source "${TMPDIR}/verify.sh"
 #CHECK ENVIRONMENT#
-[ "${BOOTMODE}" ] || {
+[ ${BOOTMODE} ] || {
     separator_print
-    print_cn "! 不受支持的安装环境 Recovery"
-    print_cn "! 请从 KernelSU, APatch 或 Magisk 应用安装"
-    print_en "! Install from recovery is not supported"
-    print_en "! Please install from KernelSU, APatch or Magisk app"
+    print_cn '! 不受支持的安装环境 Recovery'
+    print_cn '! 请从 KernelSU, APatch 或 Magisk 应用安装'
+    print_en '! Install from recovery is not supported'
+    print_en '! Please install from KernelSU, APatch or Magisk app'
     separator_abort
 }
 [ ${RELEASE} -lt ${MIN_RELEASE} ] && {
@@ -131,31 +134,21 @@ source "${TMPDIR}/verify.sh"
     print_en "! Minimal supported android version is ${MIN_RELEASE}"
     separator_abort
 }
-if [ "${KSU}" ] && [ -f "${ADB}/ksu/mount_system" ] && grep -q "OVERLAYFS" "${ADB}/ksu/mount_system" || [ "${APATCH}" ] && [ -f "${ADB}/.overlayfs_enable" ]
+if [ ${KSU} ]
 then
-    separator_print
-    print_cn "! 不受支持的挂载系统 OverlayFS"
-    print_cn "! 由于冲突模块排除功能在此模式无法正常工作"
-    print_cn "! 请切换到 Magic Mount 挂载系统或元模块挂载系统后再次安装"
-    print_en "! Unsupported mount system: OverlayFS"
-    print_en "! Conflict module exclusion cannot work in this mode"
-    print_en "! Please switch to Magic Mount mount system or Meta Module mount system before installing again"
-    separator_abort
-fi
-#PRINT INFORMATION#
-if [ "${KSU}" ]
-then
+    [ -f "${ADB}/ksu/mount_system" ] && grep -q 'OVERLAYFS' "${ADB}/ksu/mount_system" && overlayfs_abort
     print_cn "- KernelSU版本号: ${KSU_KERNEL_VER_CODE}(kernel) ${KSU_VER_CODE}(ksud)"
     print_cn "- KernelSU版本: ${KSU_VER}"
     print_en "- KernelSU version code: ${KSU_KERNEL_VER_CODE}(kernel) ${KSU_VER_CODE}(ksud)"
     print_en "- KernelSU version: ${KSU_VER}"
-elif [ "${APATCH}" ]
+elif [ ${APATCH} ]
 then
+    [ -f "${ADB}/.overlayfs_enable" ] && overlayfs_abort
     print_cn "- APatch版本号: ${APATCH_VER_CODE}"
     print_cn "- APatch版本: ${APATCH_VER}"
     print_en "- APatch version code: ${APATCH_VER_CODE}"
     print_en "- APatch version: ${APATCH_VER}"
-elif [ "${MAGISK_VER}" ]
+elif [ ${MAGISK_VER} ]
 then
     print_cn "- Magisk版本号: ${MAGISK_VER_CODE}"
     print_cn "- Magisk版本: ${MAGISK_VER}"
@@ -167,19 +160,20 @@ print_en "- Install module FS-Enhancer-Extreme ${MODULE_VER}"
 ##END##
 
 ##EXTRACT MODULE FILES##
-print_cn "- 提取文件"
-print_en "- Extracting files"
+print_cn '- 提取文件'
+print_en '- Extracting files'
 for FILE in ${FILES}
 do
     extract "${ZIPFILE}" "${FILE}" "${MODPATH}"
 done
-mkdir -p "${ADB}/service.d"
-cp -f "${MODPATH}/script/state.sh" "${ADB}/service.d/.fsee_state.sh"
+cp -f "${MODPATH}/module.prop" "${MODPATH}/module.base"
+sed -i "s|description=|description=[🔄${DESC_REBOOT}] |" "${MODPATH}/module.prop"
+mkdir -p "${ADB}/service.d" && cp -f "${MODPATH}/script/state.sh" "${ADB}/service.d/.fsee_state.sh"
 ##END##
 
 ##POST PROCESS##
-print_cn "- 设置权限"
-print_en "- Setting permissions"
+print_cn '- 设置权限'
+print_en '- Setting permissions'
 chcon u:object_r:shell_data_file:s0 "${MODPATH}/provider.apk"
 for NE in ${NES}
 do
@@ -188,16 +182,16 @@ done
 if [ ! -f "${FSEECONFIG}/usr.txt" ] || [ ! -f "${FSEECONFIG}/sys.txt" ]
 then
     mkdir -p "${FSEECONFIG}"
-    print_cn "- 创建排除列表"
-    print_en "- Create default exclusion list"
+    print_cn '- 创建排除列表'
+    print_en '- Create default exclusion list'
     [ -f "${FSEECONFIG}/sys.txt" ] || echo "$SYS" | grep -v '^$' > "${FSEECONFIG}/sys.txt"
     [ -f "${FSEECONFIG}/usr.txt" ] || echo "$USR" | grep -v '^$' > "${FSEECONFIG}/usr.txt"
 fi
-[ "$(grep_get_prop ro.product.brand)" = "OnePlus" ] && {
-    grep -qx "com.oplus.engineermode" "${FSEECONFIG}/sys.txt" || echo "com.oplus.engineermode" >> "${FSEECONFIG}/sys.txt"
-    grep -qx "com.coloros.sceneservice" "${FSEECONFIG}/sys.txt" || echo "com.coloros.sceneservice" >> "${FSEECONFIG}/sys.txt"
+[ "`grep_get_prop ro.product.brand`" = 'OnePlus' ] && {
+    grep -qx 'com.oplus.engineermode' "${FSEECONFIG}/sys.txt" || echo 'com.oplus.engineermode' >> "${FSEECONFIG}/sys.txt"
+    grep -qx 'com.coloros.sceneservice' "${FSEECONFIG}/sys.txt" || echo 'com.coloros.sceneservice' >> "${FSEECONFIG}/sys.txt"
 }
 ##END##
 
-print_cn "- 安装完毕"
-print_en "- Install Done"
+print_cn '- 安装完毕'
+print_en '- Install Done'

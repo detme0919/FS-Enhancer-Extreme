@@ -14,20 +14,20 @@
 #
 
 cd "${0%/*}"
-source "./script/util_functions.sh"
+source './script/util_functions.sh'
 envcheck
 
-logI "启动后台服务"
-fseec fseectl start || logE "服务启动失败"
+logI '启动服务'
+fseec fseectl start || logE '服务启动失败'
 
 initwait
-logI "刷新目标列表"
+logI '刷新目标列表'
 invoke listrefresh
-logI "卸载冲突软件"
+logI '处理冲突软件'
 invoke appcheck
-logI "将安全补丁级别同步到属性"
+logI '将自定义安全补丁级别同步到 prop'
 invoke spsyncprop
-logI "将引导程序属性设置为锁定"
+logI '将引导加载程序相关 prop 重设为锁定'
 invoke passprop
-logI "修正VerifiedBootHash属性"
+logI '处理异常 VerifiedBootHash prop 并重设'
 invoke passvbhash

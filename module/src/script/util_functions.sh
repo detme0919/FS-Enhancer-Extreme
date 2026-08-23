@@ -26,45 +26,39 @@ LOGDIR=${FSEEDIR}/log
 FSEELOG=${LOGDIR}/log.log
 #OTHER#
 isPostFsData=false
-isServiceD=false
-isService=false
-LOG_TAG="<Undefined>"
-case "$(basename "${0}")" in
-    "post-fs-data.sh")
+LOG_TAG='<Undefined>'
+case "${0##*/}" in
+    'post-fs-data.sh')
         isPostFsData=true
-        LOG_TAG="<post-fs-data>"
+        LOG_TAG='<post-fs-data>'
         ;;
-    ".fsee_state.sh")
-        isServiceD=true
-        LOG_TAG="<service.d>"
+    '.fsee_state.sh')
+        LOG_TAG='<service.d>'
         ;;
-    "service.sh")
-        isService=true
-        LOG_TAG="<service>"
+    'service.sh')
+        LOG_TAG='<service>'
         ;;
 esac
 ##END##
 
 ##FUNCTIONS##
 fseec() {
-    ${FSEEMODDIR}/bin/fseec "${@}"
+    ${FSEEMODDIR}/bin/fseec ${@}
 }
-logout() {
-    LEVEL="${1}"
-    shift
-    echo "$(date "+%m-%d %H:%M:%S.$(date +%3N)")  ${$}  ${$} ${LEVEL} [FSEE]  : ${LOG_TAG} ${*}" >> "${FSEELOG}"
+output() {
+    echo "$(date "+%m-%d %H:%M:%S.$(date +%3N)")  ${$}  ${$} ${1} [FSEE]  : ${LOG_TAG} ${2}" >> "${FSEELOG}"
 }
 logI() {
-    logout "I" "${@}"
+    output 'I' "${1}"
 }
 logW() {
-    logout "W" "${@}"
+    output 'W' "${1}"
 }
 logE() {
-    logout "E" "${@}"
+    output 'E' "${1}"
 }
 initwait() {
-    until [ "$(getprop sys.boot_completed)" -eq 1 ]
+    until [ "`getprop sys.boot_completed`" -eq 1 ]
     do
         sleep 1s
     done
@@ -72,9 +66,8 @@ initwait() {
 envcheck() {
     if fseec envcheck
     then
-        if ${isPostFsData}
-        then
-            logI "环境正常,继续执行"
+        ${isPostFsData} && {
+            logI '环境正常, 继续执行'
             mv -f "${FSEEMODDIR}/.webroot" "${FSEEMODDIR}/webroot"
             if [[ ! "${APATCH}" && ! "${KSU}" ]]
             then
@@ -82,23 +75,22 @@ envcheck() {
             else
                 mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/.action.sh" >/dev/null 2>&1
             fi
-        fi
+        }
     else
-        if ${isPostFsData}
-        then
-            logE "环境异常,拦截执行"
+        ${isPostFsData} && {
+            logE '环境异常, 拦截执行'
             mv -f "${FSEEMODDIR}/webroot" "${FSEEMODDIR}/.webroot" >/dev/null 2>&1
             mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/.action.sh" >/dev/null 2>&1
-        fi
+        }
         exit
     fi
 }
 invoke() {
-    if fseec "${@}" >> "${FSEELOG}" 2>&1
+    if fseec ${@} >> "${FSEELOG}" 2>&1
     then
-        logI "完毕"
+        logI "Ok(${@})"
     else
-        logW "失败"
+        logW "Err(${@})"
     fi
 }
 ##END##

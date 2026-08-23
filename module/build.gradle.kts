@@ -26,24 +26,22 @@ val verHash:    String by rootProject.extra
 listOf(
     "debug",
     "release"
-).forEach { variantName ->
-    val variantCapped = variantName.replaceFirstChar {
+).forEach {
+    val variantCapped = it.replaceFirstChar {
         if (it.isLowerCase()) it.titlecase() else it.toString()
     }
-    val variantLowered = variantName.lowercase()
+    val variantLowered = it.lowercase()
     val moduleDir = layout.buildDirectory.dir("outputs/module/${variantLowered}")
     val moduleDirFile = moduleDir.get().asFile
-    val zipFileName = "${moduleName}-${verName}-${verCode}-${verHash}-${variantName}.zip".replace(' ', '-')
+    val zipFileName = "${moduleName}-${verName}-${verCode}-${verHash}-${variantLowered}.zip".replace(' ', '-')
 
     val prepareModuleFilesTask = tasks.register<Copy>("prepareModuleFiles${variantCapped}") {
         group = "module"
-        description = "Prepares module files for ${variantName}."
+        description = "Prepares module files for ${variantCapped}."
 
         dependsOn(
-            ":fseea:assemble${variantCapped}",
-            ":fseec:build${variantCapped}",
-            ":fsees:build${variantCapped}",
-            ":fseeu:build${variantCapped}",
+            ":fseeb:build${variantCapped}",
+            ":fseep:assemble${variantCapped}",
             ":fseew:build${variantCapped}"
         )
 
@@ -54,18 +52,9 @@ listOf(
         }
 
         into(moduleDir)
-            from(project(":fseea").layout.buildDirectory.file("outputs/apk/${variantLowered}")) {
-                include(
-                    "fseea-${variantLowered}.apk"
-                )
-                rename(
-                    "fseea-${variantLowered}.apk",
-                    "provider.apk"
-                )
-            }
             from("${projectDir}/src") {
                 include(
-                    "module.base"
+                    "module.prop"
                 )
                 expand(
                     "moduleId" to "${moduleId}",
@@ -74,19 +63,10 @@ listOf(
                     "versionCode" to "${verCode}"
                 )
             }
-            from(moduleDir) {
-                include(
-                    "module.base"
-                )
-                rename(
-                    "module.base",
-                    "module.prop"
-                )
-            }
             from("${projectDir}/src") {
                 exclude(
                     ".DS_Store",
-                    "module.base"
+                    "module.prop"
                 )
             }
             from(rootProject.rootDir) {
@@ -99,8 +79,17 @@ listOf(
                     "README4zh-Hans.md"
                 )
             }
+            from(project(":fseep").file("build/outputs/apk/${variantLowered}")) {
+                include(
+                    "fseep-${variantLowered}.apk"
+                )
+                rename(
+                    "fseep-${variantLowered}.apk",
+                    "provider.apk"
+                )
+            }
         into("bin") {
-            from(rootProject.file("target/aarch64-linux-android/${variantLowered}")) {
+            from(project(":fseeb").file("target/aarch64-linux-android/${variantLowered}")) {
                 include(
                     "fseec",
                     "fsees"
@@ -108,7 +97,7 @@ listOf(
             }
         }
         into("lib") {
-            from(rootProject.file("target/aarch64-linux-android/${variantLowered}")) {
+            from(project(":fseeb").file("target/aarch64-linux-android/${variantLowered}")) {
                 include("libutils.so")
             }
         }
@@ -123,7 +112,7 @@ listOf(
 
     val signModuleFilesTask = tasks.register("signModule${variantCapped}") {
         group = "module"
-        description = "Sign module files for ${variantName}."
+        description = "Sign module files for ${variantCapped}."
 
         dependsOn(prepareModuleFilesTask)
 
@@ -164,7 +153,7 @@ listOf(
                         "script/state.sh",
                         "script/util_functions.sh",
                         "action.sh",
-                        "module.base",
+                        "module.prop",
                         "post-fs-data.sh",
                         "provider.apk",
                         "service.sh",

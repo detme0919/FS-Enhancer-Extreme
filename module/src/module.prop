@@ -1,0 +1,7 @@
+id=${moduleId}
+name=${moduleName}
+version=${versionName}
+versionCode=${versionCode}
+author=XtrLumen
+description=Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootloader.
+updateJson=https://xtrlumen.github.io/FS-Enhancer-Extreme/update.json
