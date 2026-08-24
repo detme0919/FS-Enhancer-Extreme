@@ -25,7 +25,8 @@ function switchPage(pageName: PagesKey) {
     pageElement.scrollTop = 0;
 
     if (!loadedPages.has(pageName)) {
-        PAGE_STRUCT[pageName].page.put(pageElement);
+        pageElement.innerHTML = PAGE_STRUCT[pageName].page;
+        PAGE_STRUCT[pageName].entry(pageElement);
         loadedPages.add(pageName)
     }
 

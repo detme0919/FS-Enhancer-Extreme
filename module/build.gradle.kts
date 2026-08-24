@@ -79,15 +79,6 @@ listOf(
                     "README4zh-Hans.md"
                 )
             }
-            from(project(":fseep").file("build/outputs/apk/${variantLowered}")) {
-                include(
-                    "fseep-${variantLowered}.apk"
-                )
-                rename(
-                    "fseep-${variantLowered}.apk",
-                    "provider.apk"
-                )
-            }
         into("bin") {
             from(project(":fseeb").file("target/aarch64-linux-android/${variantLowered}")) {
                 include(
@@ -99,6 +90,26 @@ listOf(
         into("lib") {
             from(project(":fseeb").file("target/aarch64-linux-android/${variantLowered}")) {
                 include("libutils.so")
+            }
+        }
+        into("other") {
+            from(moduleDir) {
+                include(
+                    "module.prop"
+                )
+                rename(
+                    "module.prop",
+                    "module.base"
+                )
+            }
+            from(project(":fseep").file("build/outputs/apk/${variantLowered}")) {
+                include(
+                    "fseep-${variantLowered}.apk"
+                )
+                rename(
+                    "fseep-${variantLowered}.apk",
+                    "provider.apk"
+                )
             }
         }
         into("webroot") {
@@ -141,21 +152,21 @@ listOf(
                 }
             }
 
-            val mistyFile = File(moduleDirFile, "mistylake")
+            val raanaFile = File(moduleDirFile, "other/raana")
             if (privateKeyFile.exists()) {
-                fun mistylakeSign() {
+                fun raanaSign() {
                     val BLAKE3Builder = StringBuilder()
 
                     listOf(
                         "bin/fseec",
                         "bin/fsees",
                         "lib/libutils.so",
+                        "other/module.base",
+                        "other/provider.apk",
                         "script/state.sh",
                         "script/util_functions.sh",
                         "action.sh",
-                        "module.prop",
                         "post-fs-data.sh",
-                        "provider.apk",
                         "service.sh",
                         "uninstall.sh"
                     ).forEach {
@@ -186,22 +197,22 @@ listOf(
 
                     val finalSignBytes = signInstance.sign()
 
-                    mistyFile.writeBytes(finalSignBytes.copyOfRange(0, 16))
-                    mistyFile.appendBytes(publicKeyBytes.copyOfRange(0, 16))
-                    mistyFile.appendBytes(finalSignBytes.copyOfRange(16, 48))
-                    mistyFile.appendBytes(publicKeyBytes.copyOfRange(16, 32))
-                    mistyFile.appendBytes(finalSignBytes.copyOfRange(48, 64))
+                    raanaFile.writeBytes(finalSignBytes.copyOfRange(0, 16))
+                    raanaFile.appendBytes(publicKeyBytes.copyOfRange(0, 16))
+                    raanaFile.appendBytes(finalSignBytes.copyOfRange(16, 48))
+                    raanaFile.appendBytes(publicKeyBytes.copyOfRange(16, 32))
+                    raanaFile.appendBytes(finalSignBytes.copyOfRange(48, 64))
                 }
 
-                mistylakeSign()
+                raanaSign()
 
                 sha256Sum()
 
-                println("=== Guards the peace of Misty Lake ===")
+                println("=== Forever Guard Cute Neko Raana ===")
             } else {
-                println("no private_key found, this build will not be signed")
+                println("No private_key found, This build will not be signed")
 
-                mistyFile.createNewFile()
+                raanaFile.createNewFile()
 
                 sha256Sum()
             }

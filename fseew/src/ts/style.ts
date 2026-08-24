@@ -3,6 +3,8 @@ import {
     ProgressBarDefinition,
     Switch,
     SwitchDefinition,
+    Button,
+    ButtonDefinition,
     setTheme
 } from '@fluentui/web-components';
 
@@ -13,6 +15,7 @@ import {
 export function entry() {
     setTheme(webLightTheme);
 
-    Switch.define(SwitchDefinition)
+    Switch.define(SwitchDefinition);
+    Button.define(ButtonDefinition);
     ProgressBar.define(ProgressBarDefinition)
 }

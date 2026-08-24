@@ -110,11 +110,15 @@ body {
                     }
 
                     // 深色模式
-                    > fluent-switch {
-                        // 推到最右
-                        margin-left: auto;
-                        // 右边距
-                        margin-right: 16px;
+                    // > fluent-switch {
+                    //     // 推到最右
+                    //     margin-left: auto;
+                    //     // 右边距
+                    //     margin-right: 16px;
+                    // }
+
+                    > fluent-button {
+                        // margin: 0;
                     }
                 }
             }

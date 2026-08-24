@@ -72,7 +72,7 @@ pub fn refresh(mode: Mode) -> anyhow::Result<()> {
         if data.iter().all(|&bytes|
             bytes == 0
         ) {
-            fs::copy(base_path.join("module.base"), base_path.join("module.prop"))?;
+            fs::copy(base_path.join("other/module.base"), base_path.join("module.prop"))?;
         }
     } {
         log::error(&format!("失败: {}", error));

@@ -2,14 +2,40 @@ export type str = string;
 export type f64 = number;
 export type bool = boolean;
 
-export interface SubPage {
-    put(root: HTMLElement): void
+interface PageEntry {
+    (element: HTMLElement): void | Promise<void>;
 }
 
-import {homePage}     from './pages/home';
-import {listPage}     from './pages/list';
-import {invokePage}   from './pages/invoke';
-import {settingsPage} from './pages/settings';
+type Icon = {
+    regular: str;
+    filled:  str;
+}
+
+type Page = {
+    page: str;
+    entry: PageEntry;
+    icon: Icon;
+    text: str;
+}
+
+type Pages = {
+    home:     Page,
+    list:     Page,
+    invoke:   Page,
+    settings: Page,
+}
+
+export type PagesKey = keyof Pages;
+
+import * as homePage     from './pages/home';
+import * as listPage     from './pages/list';
+import * as invokePage   from './pages/invoke';
+import * as settingsPage from './pages/settings';
+
+import homeHtml     from '../html/home.html?raw';
+import listHtml     from '../html/list.html?raw';
+import invokeHtml   from '../html/invoke.html?raw';
+import settingsHtml from '../html/settings.html?raw';
 
 import HOME_REGULAR     from '@fluentui/svg-icons/icons/home_28_regular.svg?raw';
 import HOME_FILLED      from '@fluentui/svg-icons/icons/home_28_filled.svg?raw';
@@ -20,24 +46,10 @@ import INVOKE_FILLED    from '@fluentui/svg-icons/icons/puzzle_piece_28_filled.s
 import SETTINGS_REGULAR from '@fluentui/svg-icons/icons/settings_28_regular.svg?raw';
 import SETTINGS_FILLED  from '@fluentui/svg-icons/icons/settings_28_filled.svg?raw';
 
-type Icon = {
-    regular: str;
-    filled:  str;
-}
-type Page = {
-    page: SubPage;
-    icon: Icon;
-    text: str;
-}
-type Pages = {
-    home:     Page,
-    list:     Page,
-    invoke:   Page,
-    settings: Page,
-}
 export const PAGE_STRUCT: Pages = {
     home: {
-        page: homePage,
+        page: homeHtml,
+        entry: homePage.entry,
         icon: {
             regular: HOME_REGULAR,
             filled:  HOME_FILLED
@@ -45,7 +57,8 @@ export const PAGE_STRUCT: Pages = {
         text: '首页'
     },
     list: {
-        page: listPage,
+        page: listHtml,
+        entry: listPage.entry,
         icon: {
             regular: LIST_REGULAR,
             filled:  LIST_FILLED
@@ -53,7 +66,8 @@ export const PAGE_STRUCT: Pages = {
         text: '列表'
     },
     invoke: {
-        page: invokePage,
+        page: invokeHtml,
+        entry: invokePage.entry,
         icon: {
             regular: INVOKE_REGULAR,
             filled:  INVOKE_FILLED
@@ -61,7 +75,8 @@ export const PAGE_STRUCT: Pages = {
         text: '调用'
     },
     settings: {
-        page: settingsPage,
+        page: settingsHtml,
+        entry: settingsPage.entry,
         icon: {
             regular: SETTINGS_REGULAR,
             filled:  SETTINGS_FILLED
@@ -69,7 +84,5 @@ export const PAGE_STRUCT: Pages = {
         text: '设置'
     }
 }
-
-export type PagesKey = keyof Pages;
 
 export const PAGE_LIST: PagesKey[] = Object.keys(PAGE_STRUCT) as PagesKey[];

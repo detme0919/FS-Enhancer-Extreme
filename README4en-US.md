@@ -92,16 +92,16 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 - Execute in the terminal `./gradlew zip`
 
 ## Acknowledgement
-- [Fluent 2](https://storybooks.fluentui.dev/web-components)
+- [Fluent2](https://storybooks.fluentui.dev/web-components)
   - webui Design System Library
 - [APatch](https://github.com/bmax121/APatch)
   - fseec `cli.rs` References
 - [NeoZygisk](https://github.com/JingMatrix/NeoZygisk)
   - fseec `magisk.rs` References
+- [Android-Open-Source-Project](https://cs.android.com/android/platform/superproject)
+  - fseec `util_functions.rs` `fn pidof` References
 - [KeyAttestation](https://github.com/vvb2060/KeyAttestation)
   - VBMetaProvider `attestation/*` Direct Source
-- [Android-Open-Source-Project](https://cs.android.com/android/platform/superproject)
-  - fseec `fn pidof` References
 
 ## Other
 ### Project address (For users downloading from sources other than GitHub to trace back from this README)

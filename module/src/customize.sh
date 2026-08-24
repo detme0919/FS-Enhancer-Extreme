@@ -14,7 +14,7 @@
 #
 
 ##VARIABLE##
-#PUBLIC#
+#GLOBAL#
 SKIPUNZIP=1
 #ZERO LEVEL#
 ADB=/data/adb
@@ -22,28 +22,32 @@ ADB=/data/adb
 MODULESDIR=${ADB}/modules
 #TWO LEVEL#
 FSEECONFIG=${ADB}/fs_enhancer_extreme/config
+#PUBLIC#
+IS_ZHCN=false
+DESC_REBOOT='Need Reboot'
+[ ! -f "${FSEECONFIG}/english" ] && [[ "`getprop persist.sys.locale`" == *'zh'* || "`getprop ro.product.locale`" == *'zh'* ]] && {
+    IS_ZHCN=true
+    DESC_REBOOT='需要重启'
+}
 #FUNCTIONS#
 SEPARATOR='***********************************************'
-IS_ZHCN=false
 #PRE PROCESS#
 MIN_RELEASE=10
 RELEASE=`grep_get_prop ro.build.version.release`
-MODULE_VER="`grep_prop version "${TMPDIR}/module.prop"`"
+MODULE_VER=`grep_prop version "${TMPDIR}/module.prop"`
 #EXTRACT MODULE FILES#
 FILES='
 bin/*
 lib/*
+other/*
 script/*
 webroot/*
 action.sh
-mistylake
 module.prop
 post-fs-data.sh
-provider.apk
 service.sh
 uninstall.sh
 '
-DESC_REBOOT='Need Reboot'
 #POST PROCESS#
 NES="
 ${MODPATH}/bin/fseec
@@ -68,10 +72,6 @@ separator_print() {
 }
 separator_abort() {
     abort "${SEPARATOR}"
-}
-[ ! -f "${FSEECONFIG}/english" ] && [[ "`getprop persist.sys.locale`" == *'zh'* || "`getprop ro.product.locale`" == *'zh'* ]] && {
-    IS_ZHCN=true
-    DESC_REBOOT='需要重启'
 }
 operate() {
     if ${1}
@@ -166,7 +166,6 @@ for FILE in ${FILES}
 do
     extract "${ZIPFILE}" "${FILE}" "${MODPATH}"
 done
-cp -f "${MODPATH}/module.prop" "${MODPATH}/module.base"
 sed -i "s|description=|description=[🔄${DESC_REBOOT}] |" "${MODPATH}/module.prop"
 mkdir -p "${ADB}/service.d" && cp -f "${MODPATH}/script/state.sh" "${ADB}/service.d/.fsee_state.sh"
 ##END##
@@ -174,7 +173,7 @@ mkdir -p "${ADB}/service.d" && cp -f "${MODPATH}/script/state.sh" "${ADB}/servic
 ##POST PROCESS##
 print_cn '- 设置权限'
 print_en '- Setting permissions'
-chcon u:object_r:shell_data_file:s0 "${MODPATH}/provider.apk"
+chcon u:object_r:shell_data_file:s0 "${MODPATH}/other/provider.apk"
 for NE in ${NES}
 do
     chmod +x "${NE}"
@@ -184,14 +183,11 @@ then
     mkdir -p "${FSEECONFIG}"
     print_cn '- 创建排除列表'
     print_en '- Create default exclusion list'
-    [ -f "${FSEECONFIG}/sys.txt" ] || echo "$SYS" | grep -v '^$' > "${FSEECONFIG}/sys.txt"
-    [ -f "${FSEECONFIG}/usr.txt" ] || echo "$USR" | grep -v '^$' > "${FSEECONFIG}/usr.txt"
+    [ -f "${FSEECONFIG}/sys.txt" ] || echo "${SYS}" | grep -v '^$' > "${FSEECONFIG}/sys.txt"
+    [ -f "${FSEECONFIG}/usr.txt" ] || echo "${USR}" | grep -v '^$' > "${FSEECONFIG}/usr.txt"
 fi
-[ "`grep_get_prop ro.product.brand`" = 'OnePlus' ] && {
+[ `grep_get_prop ro.product.brand` = 'OnePlus' ] && {
     grep -qx 'com.oplus.engineermode' "${FSEECONFIG}/sys.txt" || echo 'com.oplus.engineermode' >> "${FSEECONFIG}/sys.txt"
     grep -qx 'com.coloros.sceneservice' "${FSEECONFIG}/sys.txt" || echo 'com.coloros.sceneservice' >> "${FSEECONFIG}/sys.txt"
 }
 ##END##
-
-print_cn '- 安装完毕'
-print_en '- Install Done'

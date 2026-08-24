@@ -1,7 +1,9 @@
-import type {SubPage} from '../define';
+import type {
+    f64,
+    bool,
+    PagesKey
+} from '../define';
 
-import homeHtml from '../../html/home.html?raw';
-
-export const homePage: SubPage = {
-    put: (element) => element.innerHTML = homeHtml
+export function entry(element: HTMLElement) {
+    element
 }

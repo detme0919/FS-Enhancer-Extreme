@@ -13,7 +13,7 @@
 # Copyright (C) 2025-2026 XtrLumen
 #
 
-rm -rf /data/adb/fs_enhancer_extreme/
+rm -rf '/data/adb/fs_enhancer_extreme'
 
-rm -f /data/adb/service.d/.fsee_state.sh
-find /data/adb/service.d -empty -delete
+rm -f '/data/adb/service.d/.fsee_state.sh'
+find '/data/adb/service.d' -empty -delete

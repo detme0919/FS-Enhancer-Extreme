@@ -48,7 +48,7 @@ extract() {
             print_en "- Verified ${file}"
         }
     }
-    if [[ "${2}" == */\* ]]
+    if [[ "${2}" == *'/*' ]]
     then
         for file in $(unzip -l "${1}" "${2}" 2>/dev/null | awk 'NR>3 {print $4}' | grep -v '/$' | grep -v '^$')
         do

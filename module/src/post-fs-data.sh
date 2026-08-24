@@ -15,22 +15,12 @@
 
 cd "${0%/*}"
 source './script/util_functions.sh'
-rm -rf "${OLDLOG}"
-mv -f "${LOGDIR}" "${OLDLOG}"
-mkdir -p "${LOGDIR}"
-touch "${FSEELOG}"
-logI '完成日志轮换'
-
-[ -x "${ADB}/service.d/.fsee_state.sh" ] || {
-    logI '配置描述文件刷新脚本'
-    mkdir -p "${ADB}/service.d"
-    cp -f "${FSEEMODDIR}/script/state.sh" "${ADB}/service.d/.fsee_state.sh"
-    chmod +x "${ADB}/service.d/.fsee_state.sh"
-}
+rotation
 
 logI '收集运行环境'
 invoke envcollect
-envcheck
+initial
+intercept
 
 logI '处理冲突模块'
 invoke modcheck

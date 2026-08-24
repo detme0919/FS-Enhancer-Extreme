@@ -92,16 +92,16 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 - 于终端执行 `./gradlew zip`
 
 ## 致谢
-- [Fluent 2](https://storybooks.fluentui.dev/web-components)
+- [Fluent2](https://storybooks.fluentui.dev/web-components)
   - webui 设计系统库
 - [APatch](https://github.com/bmax121/APatch)
   - fseec `cli.rs` 参考来源
 - [NeoZygisk](https://github.com/JingMatrix/NeoZygisk)
   - fseec `magisk.rs` 参考来源
+- [Android-Open-Source-Project](https://cs.android.com/android/platform/superproject)
+  - fseec `util_functions.rs` `fn pidof` 参考来源
 - [KeyAttestation](https://github.com/vvb2060/KeyAttestation)
   - VBMetaProvider `attestation/*` 直接来源
-- [Android-Open-Source-Project](https://cs.android.com/android/platform/superproject)
-  - fseec `fn pidof` 参考来源
 
 ## 其他
 ### 本项目地址(用于非Github下载的用户从本自述文件溯源)

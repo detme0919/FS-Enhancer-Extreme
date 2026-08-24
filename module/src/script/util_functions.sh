@@ -20,16 +20,13 @@ ADB=/data/adb
 FSEEMODDIR=${ADB}/modules/fs_enhancer_extreme
 FSEEDIR=${ADB}/fs_enhancer_extreme
 #TWO LEVEL#
-FSEECONFIG=${FSEEDIR}/config
 OLDLOG=${FSEEDIR}/log.old
 LOGDIR=${FSEEDIR}/log
 FSEELOG=${LOGDIR}/log.log
 #OTHER#
-isPostFsData=false
 LOG_TAG='<Undefined>'
 case "${0##*/}" in
     'post-fs-data.sh')
-        isPostFsData=true
         LOG_TAG='<post-fs-data>'
         ;;
     '.fsee_state.sh')
@@ -46,7 +43,7 @@ fseec() {
     ${FSEEMODDIR}/bin/fseec ${@}
 }
 output() {
-    echo "$(date "+%m-%d %H:%M:%S.$(date +%3N)")  ${$}  ${$} ${1} [FSEE]  : ${LOG_TAG} ${2}" >> "${FSEELOG}"
+    echo "`date '+%m-%d %H:%M:%S.%3N'`  ${$}  ${$} ${1} [FSEE]  : ${LOG_TAG} ${2}" >> "${FSEELOG}"
 }
 logI() {
     output 'I' "${1}"
@@ -57,33 +54,50 @@ logW() {
 logE() {
     output 'E' "${1}"
 }
+rotation() {
+    rm -rf "${OLDLOG}"
+    mv -f "${LOGDIR}" "${OLDLOG}"
+    mkdir -p "${LOGDIR}"
+    touch "${FSEELOG}"
+    logI '完成日志轮换'
+}
+initial() {
+    [ -x "${ADB}/service.d/.fsee_state.sh" ] || {
+        logI '配置描述文件刷新脚本'
+        mkdir -p "${ADB}/service.d"
+        cp -f "${FSEEMODDIR}/script/state.sh" "${ADB}/service.d/.fsee_state.sh"
+        chmod +x "${ADB}/service.d/.fsee_state.sh"
+    }
+    action_disable() {
+        mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/script/action.sh" >/dev/null 2>&1
+    }
+    if fseec envcheck
+    then
+        logI '环境正常'
+        mv -f "${FSEEMODDIR}/other/webroot" "${FSEEMODDIR}/webroot" >/dev/null 2>&1
+        if [ ${APATCH} ] || [ ${KSU} ]
+        then
+            action_disable
+        else
+            mv -f "${FSEEMODDIR}/script/action.sh" "${FSEEMODDIR}/action.sh" >/dev/null 2>&1
+        fi
+    else
+        logE '环境异常'
+        mv -f "${FSEEMODDIR}/webroot" "${FSEEMODDIR}/other/webroot" >/dev/null 2>&1
+        action_disable
+    fi
+}
+intercept() {
+    fseec envcheck || {
+        logE '拦截执行'
+        exit
+    }
+}
 initwait() {
-    until [ "`getprop sys.boot_completed`" -eq 1 ]
+    until [ `getprop sys.boot_completed` -eq 1 ]
     do
         sleep 1s
     done
-}
-envcheck() {
-    if fseec envcheck
-    then
-        ${isPostFsData} && {
-            logI '环境正常, 继续执行'
-            mv -f "${FSEEMODDIR}/.webroot" "${FSEEMODDIR}/webroot"
-            if [[ ! "${APATCH}" && ! "${KSU}" ]]
-            then
-                mv -f "${FSEEMODDIR}/.action.sh" "${FSEEMODDIR}/action.sh" >/dev/null 2>&1
-            else
-                mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/.action.sh" >/dev/null 2>&1
-            fi
-        }
-    else
-        ${isPostFsData} && {
-            logE '环境异常, 拦截执行'
-            mv -f "${FSEEMODDIR}/webroot" "${FSEEMODDIR}/.webroot" >/dev/null 2>&1
-            mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/.action.sh" >/dev/null 2>&1
-        }
-        exit
-    fi
 }
 invoke() {
     if fseec ${@} >> "${FSEELOG}" 2>&1

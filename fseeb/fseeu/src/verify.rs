@@ -35,7 +35,7 @@ use ed25519_compact::{
 pub fn entry() -> Option<bool> {
     let base_path = Path::new(FSEEMODDIR);
 
-    let misty_bytes: Vec<u8> = if let Ok(data) = fs::read(base_path.join("mistylake")) {
+    let raana_bytes: Vec<u8> = if let Ok(data) = fs::read(base_path.join("other/raana")) {
         if data.is_empty() {
             return None
         } else {
@@ -45,22 +45,20 @@ pub fn entry() -> Option<bool> {
         return Some(false)
     };
 
-    let action: &str = if base_path.join(".action.sh").exists() {
-        ".action.sh"
-    } else {
-        "action.sh"
-    };
-
     let files: [&str; SYNC_LEN] = [
         "bin/fseec",
         "bin/fsees",
         "lib/libutils.so",
+        "other/module.base",
+        "other/provider.apk",
         "script/state.sh",
         "script/util_functions.sh",
-        action,
-        "module.base",
+        if base_path.join("action.sh").exists() {
+            "action.sh"
+        } else {
+            "script/action.sh"
+        },
         "post-fs-data.sh",
-        "provider.apk",
         "service.sh",
         "uninstall.sh"
     ];
@@ -91,15 +89,15 @@ pub fn entry() -> Option<bool> {
     }
 
     let mut public_key_bytes = [0u8; 32];
-    public_key_bytes[0..16].copy_from_slice(&misty_bytes[16..32]);
-    public_key_bytes[16..32].copy_from_slice(&misty_bytes[64..80]);
+    public_key_bytes[0..16].copy_from_slice(&raana_bytes[16..32]);
+    public_key_bytes[16..32].copy_from_slice(&raana_bytes[64..80]);
 
     let final_data = rebuild_checksum.as_bytes();
 
     let mut sign_bytes = [0u8; 64];
-    sign_bytes[0..16].copy_from_slice(&misty_bytes[0..16]);
-    sign_bytes[16..48].copy_from_slice(&misty_bytes[32..64]);
-    sign_bytes[48..64].copy_from_slice(&misty_bytes[80..96]);
+    sign_bytes[0..16].copy_from_slice(&raana_bytes[0..16]);
+    sign_bytes[16..48].copy_from_slice(&raana_bytes[32..64]);
+    sign_bytes[48..64].copy_from_slice(&raana_bytes[80..96]);
 
     let final_sign = Signature::new(sign_bytes);
 

@@ -15,7 +15,7 @@
 
 cd "${0%/*}"
 source './script/util_functions.sh'
-envcheck
+intercept
 
 logI '启动服务'
 fseec fseectl start || logE '服务启动失败'
