@@ -5,6 +5,8 @@ import {
     SwitchDefinition,
     Button,
     ButtonDefinition,
+    TextArea,
+    TextAreaAppearancesForDisplayShadow,
     setTheme
 } from '@fluentui/web-components';
 
@@ -17,5 +19,5 @@ export function entry() {
 
     Switch.define(SwitchDefinition);
     Button.define(ButtonDefinition);
-    ProgressBar.define(ProgressBarDefinition)
+    ProgressBar.define(ProgressBarDefinition);
 }

@@ -44,6 +44,8 @@ use clap::{
 #[derive(Parser)]
 #[command(version = VERSION_NAME)]
 enum Commands {
+    /// For webUI Invoke
+    Api,
     /// Operation Forge Store service
     Fsctl {
         #[command(subcommand)]
@@ -113,6 +115,7 @@ pub fn entry() -> anyhow::Result<()> {
 
     util_functions::switch_mnt_namespace()?;
     match args {
+        Commands::Api => Ok(()),
         Commands::Fsctl {command} => {
             match command {
                 Ctl::Restart => ctl::fs_restart(),

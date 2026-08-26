@@ -27,7 +27,7 @@ logI '处理冲突软件'
 invoke appcheck
 logI '将自定义安全补丁级别同步到 prop'
 invoke spsyncprop
-logI '将引导加载程序相关 prop 重设为锁定'
+logI '重设引导加载程序解锁状态相关 prop 为锁定'
 invoke passprop
-logI '处理异常 VerifiedBootHash prop 并重设'
+logI '获取正确 VerifiedBootHash prop 并重设'
 invoke passvbhash

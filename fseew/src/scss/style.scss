@@ -10,12 +10,16 @@
     --const-bottom-inset: var(--window-inset-bottom, 0px);
     // 子页面个数
     --const-page-count: var(--var-page-count, 4);
-    // 主题色             Communication Blue & Outlook
+    // 主题色
     --var-theme-color: #0078D4;
     // 边界线
     --var-border-color: #E0E0E0;
-    // 背景色
-    --var-background-color: white;
+    // 上层背景色
+    --var-background-upper-color: #FFFFFF;
+    // 上层背景色
+    --var-background-lower-color: #F2F2F2;
+    // 顶栏大标题色
+    --var-header-font-color: white;
     // 底栏导航按钮默认色
     --var-nav-button-color : #6E6E6E;
 }
@@ -26,10 +30,10 @@ html, body {
 }
 
 body {
-    background: var(--var-background-color);
+    background-color: var(--var-background-upper-color);
     // 禁用文字选中
     user-select: none;
-    // 清除默认边距
+    // 清除外边距
     margin: 0;
     // 启用弹性布局支持
     display: flex;
@@ -44,7 +48,7 @@ body {
         overflow: hidden;
 
         // 横向滑轨容器
-        > section {
+        > div {
             // 启用弹性布局支持
             display: flex;
             // 横向排列子元素
@@ -61,7 +65,8 @@ body {
             transition: transform 0.35s cubic-bezier(0.2, 1, 0.2, 1);
 
             // 子页面
-            > article {
+            > div {
+                background-color: var(--var-background-lower-color);
                 // 启用弹性布局支持
                 display: flex;
                 // 纵向排列子元素
@@ -73,10 +78,10 @@ body {
 
                 // 顶栏
                 > header {
-                    background: var(--var-background-color);
-                    // 清除默认边距
+                    background-color: var(--var-background-upper-color);
+                    // 清除外边距
                     margin: 0;
-                    // 上边距         状态栏避让
+                    // 上内边距       状态栏避让
                     padding-top: var(--const-top-inset);
                     // 底部边界线
                     border-bottom: 1px solid var(--var-border-color);
@@ -99,8 +104,8 @@ body {
 
                     // 大标题
                     > h1 {
-                        // 左边距
-                        padding-left: 16px;
+                        // 左外边距
+                        margin-left: 17px;
                         // 字体尺寸
                         font-size: 22.5px;
                         // 字重
@@ -108,17 +113,100 @@ body {
                         // 行高
                         line-height: 28px;
                     }
+                }
 
-                    // 深色模式
-                    // > fluent-switch {
-                    //     // 推到最右
-                    //     margin-left: auto;
-                    //     // 右边距
-                    //     margin-right: 16px;
-                    // }
+                &#home_page > main {
+                    // 全部信息卡
+                    > div {
+                        // 启用弹性布局支持
+                        display: flex;
+                        // 全外边距
+                        margin: 4%;
+                        // 背景色
+                        background-color: var(--var-background-upper-color);
+                        // 边界线
+                        border: 1px solid var(--var-border-color);
+                        // 圆角
+                        border-radius: 4px;
+                        // 阴影
+                        box-shadow: 0px 1px 2.5px rgba(0, 0, 0, 12.5%);
 
-                    > fluent-button {
-                        // margin: 0;
+                        > div {
+                            > div:first-child {
+                                // 字体尺寸
+                                font-size: 17.5px;
+                            }
+                            > div:last-child {
+                                // 字体尺寸
+                                font-size: 15px;
+                                // 字重
+                                font-weight: 350;
+                            }
+                        }
+                    }
+
+                    // 状态信息卡总高度
+                    $state-card-height: 90px;
+                    // 状态信息卡图标左外边距
+                    $state-card-icon-margin-left: $state-card-height * 0.275;
+
+                    // 状态信息卡
+                    > div:first-child {
+                        // 总高度
+                        height: $state-card-height;
+                        // 横向排列子元素
+                        flex-direction: row;
+                        // 垂直居中
+                        align-items: center;
+
+                        // 状态图标
+                        > span {
+                            // 启用弹性布局支持
+                            display: flex;
+                            // 左外边距
+                            margin-left: $state-card-icon-margin-left;
+                            // 右外边距
+                            margin-right: $state-card-height * 0.225;
+                        }
+
+                        // 状态信息
+                        > div {
+                            // 纵向排列子元素
+                            flex-direction: column;
+
+                            // 主
+                            > div:first-child {
+                                // 下外边距
+                                margin-bottom: 7.5px;
+                            }
+                        }
+                    }
+
+                    // 主信息卡
+                    > div:last-child {
+                        // 总高度
+                        height: 500px;
+                        // 纵向排列子元素
+                        flex-direction: column;
+                        // 全内边距
+                        padding: $state-card-icon-margin-left;
+                        // 均匀分布
+                        justify-content: space-between;
+
+                        // 单元
+                        > div {
+                            // 标题
+                            > div:first-child {
+                                // 下外边距
+                                margin-bottom: 2.5px;
+                            }
+
+                            // 信息
+                            > div:last-child {
+                                // 任意字符间换行
+                                word-break: break-all;
+                            }
+                        }
                     }
                 }
             }
@@ -127,8 +215,9 @@ body {
 
     // 底栏
     > nav {
-        background: var(--var-background-color);
-        // 下边距            手势栏避让
+        // 背景色
+        background-color: var(--var-background-upper-color);
+        // 下内边距          手势栏避让
         padding-bottom: var(--const-bottom-inset);
         // 顶部边界线
         border-top: 1px solid var(--var-border-color);
@@ -145,7 +234,7 @@ body {
             background: none;
             // 清除边框
             border: none;
-            // 上边距
+            // 上内边距
             padding-top: 18px;
             // 占满全部宽度
             flex: 1;
@@ -159,8 +248,8 @@ body {
             color: var(--var-nav-button-color);
 
             // 图标
-            > span > svg {
-                // 覆盖色
+            > span {
+                // 填充色
                 fill: currentColor;
             }
 

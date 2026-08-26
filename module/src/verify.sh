@@ -22,11 +22,11 @@ extract() {
         local file="${2}"
         local dir="${3}"
         local args="${4}"
-        unzip -o "${zip}" "${file}" -d "${dir}" >/dev/null 2>&1
+        unzip -o "${zip}" "${file}" -d "${dir}" > /dev/null 2>&1
         file_path="${dir}/${file}"
         if [ -f "${file_path}" ]
         then
-            unzip -o "${zip}" "MANIFEST/${file}.sha256" -d "${TMPDIR_FOR_VERIFY}" >/dev/null 2>&1
+            unzip -o "${zip}" "MANIFEST/${file}.sha256" -d "${TMPDIR_FOR_VERIFY}" > /dev/null 2>&1
             hash_path="${TMPDIR_FOR_VERIFY}/MANIFEST/${file}.sha256"
             if [ -f "${hash_path}" ]
             then

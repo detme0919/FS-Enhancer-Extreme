@@ -89,6 +89,11 @@ web_test() {
     root ${FSEEMODDIR}/bin/fseec startwebui
 }
 
+scrcpy() {
+    pkill -f 'scrcpy'
+    ~/Desktop/SCRCPY > /dev/null 2>&1 &
+}
+
 case ${1} in
     rs)
         shift
@@ -151,14 +156,19 @@ case ${1} in
                     pad)
                         user wm size 2032x3048
                         user wm density 408
+                        scrcpy
                         ;;
                     reset)
                         user wm size reset
                         user wm density reset
+                        scrcpy
                         ;;
                     *)
                         invalid
                 esac
+                ;;
+            tp)
+                scrcpy
                 ;;
             *)
                 invalid
@@ -196,10 +206,6 @@ case ${1} in
             *)
                 invalid
         esac
-        ;;
-    tp)
-        pkill -f 'scrcpy'
-        ~/Desktop/SCRCPY >/dev/null 2>&1 &
         ;;
     clean)
         (cd './fseeb' && rs_clean)

@@ -1,7 +1,7 @@
 val moduleId by extra("fs_enhancer_extreme")
 val moduleName by extra("FS Enhancer Extreme")
 val verName by extra("v1.0.0")
-val verType by extra("-t")
+val verType by extra("")
 val verCode by extra(
     providers.exec {
         commandLine("git", "rev-list", "HEAD", "--count")

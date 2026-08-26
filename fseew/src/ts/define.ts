@@ -3,34 +3,36 @@ export type f64 = number;
 export type bool = boolean;
 
 interface PageEntry {
-    (element: HTMLElement): void | Promise<void>;
-}
-
-type Icon = {
-    regular: str;
-    filled:  str;
+    (element: HTMLElement): void | Promise<void>
 }
 
 type Page = {
-    page: str;
-    entry: PageEntry;
-    icon: Icon;
-    text: str;
+    layout: {
+        html: str,
+        entry: PageEntry
+    },
+    nav: {
+        icon: {
+            regular: str,
+            filled:  str
+        },
+        text: str
+    }
 }
 
 type Pages = {
     home:     Page,
     list:     Page,
     invoke:   Page,
-    settings: Page,
+    settings: Page
 }
 
 export type PagesKey = keyof Pages;
 
-import * as homePage     from './pages/home';
-import * as listPage     from './pages/list';
-import * as invokePage   from './pages/invoke';
-import * as settingsPage from './pages/settings';
+import * as homePage     from './page/home';
+import * as listPage     from './page/list';
+import * as invokePage   from './page/invoke';
+import * as settingsPage from './page/settings';
 
 import homeHtml     from '../html/home.html?raw';
 import listHtml     from '../html/list.html?raw';
@@ -48,41 +50,59 @@ import SETTINGS_FILLED  from '@fluentui/svg-icons/icons/settings_28_filled.svg?r
 
 export const PAGE_STRUCT: Pages = {
     home: {
-        page: homeHtml,
-        entry: homePage.entry,
-        icon: {
-            regular: HOME_REGULAR,
-            filled:  HOME_FILLED
+        layout: {
+            html: homeHtml,
+            entry: homePage.entry
         },
-        text: '首页'
+        nav: {
+            icon: {
+                regular: HOME_REGULAR,
+                filled:  HOME_FILLED
+            },
+            text: '首页'
+        }
     },
     list: {
-        page: listHtml,
-        entry: listPage.entry,
-        icon: {
-            regular: LIST_REGULAR,
-            filled:  LIST_FILLED
+        layout: {
+            html: listHtml,
+            entry: listPage.entry
         },
-        text: '列表'
+        nav: {
+            icon: {
+                regular: LIST_REGULAR,
+                filled:  LIST_FILLED
+            },
+            text: '列表'
+        }
     },
     invoke: {
-        page: invokeHtml,
-        entry: invokePage.entry,
-        icon: {
-            regular: INVOKE_REGULAR,
-            filled:  INVOKE_FILLED
+        layout: {
+            html: invokeHtml,
+            entry: invokePage.entry
         },
-        text: '调用'
+        nav: {
+            icon: {
+                regular: INVOKE_REGULAR,
+                filled:  INVOKE_FILLED
+            },
+            text: '调用'
+        }
     },
     settings: {
-        page: settingsHtml,
-        entry: settingsPage.entry,
-        icon: {
-            regular: SETTINGS_REGULAR,
-            filled:  SETTINGS_FILLED
+        layout: {
+            html: settingsHtml,
+            entry: settingsPage.entry
         },
-        text: '设置'
+        nav: {
+            icon: {
+                regular: SETTINGS_REGULAR,
+                filled:  SETTINGS_FILLED
+            },
+            text: '设置'
+        }
     }
 }
 
 export const PAGE_LIST: PagesKey[] = Object.keys(PAGE_STRUCT) as PagesKey[];
+
+export const FSEEMODDIR: str = "/data/adb/modules/fs_enhancer_extreme";

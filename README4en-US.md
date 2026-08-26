@@ -21,11 +21,10 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 - `libc::inotify*` real-time monitoring
   - Add a remove tag / Force delete to conflict module; Directly uninstall the conflict app when detected
   - Take over the ForgeStore module target.txt, with priority over any similar modules
-- Provides Google Hardware Attestation Root Certificate signing keybox
 - At device startup
-  - Automatically correct abnormal VerifiedBootHash prop
-  - Set the bootloader prop to locked
-  - Sync Security Patch Level to prop
+  - Sync Custom Security Patch Level to prop
+  - Get Correct VerifiedBootHash prop and reset
+  - Reset bootloader unlock state Related prop to locked
 
 ### Other
 - Avoid abnormal environments
@@ -36,7 +35,8 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
   - Force en-US: Create `/data/adb/fs_enhancer_extreme/config/english` empty file
 
 ### WebUI
-- DEV VERSION STUB
+- Provides Google Hardware Attestation Root Certificate signing keybox
+- STUB
 
 ### CLI
 - Execute in the terminal as root `/data/adb/modules/fs_enhancer_extreme/bin/fseec`

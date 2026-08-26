@@ -21,11 +21,10 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 - `libc::inotify*`实时监控
   - 对冲突模块添加移除标签/强制删除；检测到冲突软件时直接卸载
   - 接管 ForgeStore 模块 target.txt ，优先级高于任何类似模块
-- 提供谷歌硬件认证根证书签名的 keybox
 - 设备启动时
-  - 全自动修正异常 VerifiedBootHash 属性
-  - 将安全补丁级别同步到属性
-  - 将引导程序属性设置为锁定
+  - 将自定义安全补丁级别同步到 prop
+  - 重设引导加载程序解锁状态相关 prop 为锁定
+  - 获取正确 VerifiedBootHash prop 并重设
 
 ### 其他
 - 规避异常环境
@@ -36,7 +35,8 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
   - 强制 en-US : 创建 `/data/adb/fs_enhancer_extreme/config/english` 空文件
 
 ### WebUI
-- DEV VERSION STUB
+- 提供谷歌硬件认证根证书签名的 keybox
+- 占位
 
 ### 命令行工具
 - 于终端以Root身份执行 `/data/adb/modules/fs_enhancer_extreme/bin/fseec`

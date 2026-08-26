@@ -150,8 +150,8 @@ pub fn refresh(mode: Mode) -> anyhow::Result<()> {
 
         format!(
             "{}{}{}, {}{}{}, {}{}{}, {}{}{}",
-            *DESC_ROOT_IMPL, root_impl_prefix, root_impl_environment,
             *DESC_MAIN_MODULE, main_module_prefix, main_module_environment,
+            *DESC_ROOT_IMPL, root_impl_prefix, root_impl_environment,
             *DESC_INTEGRITY, integrity_prefix, integrity_state,
             *DESC_SERVICE, daemon_prefix, daemon_state
         )

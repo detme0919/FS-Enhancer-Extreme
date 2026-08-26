@@ -69,21 +69,21 @@ initial() {
         chmod +x "${ADB}/service.d/.fsee_state.sh"
     }
     action_disable() {
-        mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/script/action.sh" >/dev/null 2>&1
+        mv -f "${FSEEMODDIR}/action.sh" "${FSEEMODDIR}/script/action.sh" > /dev/null 2>&1
     }
     if fseec envcheck
     then
         logI '环境正常'
-        mv -f "${FSEEMODDIR}/other/webroot" "${FSEEMODDIR}/webroot" >/dev/null 2>&1
+        mv -f "${FSEEMODDIR}/other/webroot" "${FSEEMODDIR}/webroot" > /dev/null 2>&1
         if [ ${APATCH} ] || [ ${KSU} ]
         then
             action_disable
         else
-            mv -f "${FSEEMODDIR}/script/action.sh" "${FSEEMODDIR}/action.sh" >/dev/null 2>&1
+            mv -f "${FSEEMODDIR}/script/action.sh" "${FSEEMODDIR}/action.sh" > /dev/null 2>&1
         fi
     else
         logE '环境异常'
-        mv -f "${FSEEMODDIR}/webroot" "${FSEEMODDIR}/other/webroot" >/dev/null 2>&1
+        mv -f "${FSEEMODDIR}/webroot" "${FSEEMODDIR}/other/webroot" > /dev/null 2>&1
         action_disable
     fi
 }
