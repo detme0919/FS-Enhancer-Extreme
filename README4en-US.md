@@ -29,8 +29,8 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 ### Other
 - Avoid abnormal environments
 - Display detailed dashboard in module description, Example:  
-`[Root: ✅APatch(11224), MainModule: ✅TrickyStoreOSS(155), Integrity: ✅Verified, Daemon: ✅Running]`  
-`[Root: ❌Multiple-APatch(11224)|KernelSU(32525), MainModule: ❌Multiple-ForgeStore(143)|TrickyStore(248), Integrity: ⚠️This build is unsigned, Service: ❌All service will not start]`
+`[MainModule: ✅TrickyStoreOSS(155), Root: ✅APatch(11224), Integrity: ✅Verified, Daemon: ✅Running]`  
+`[MainModule: ❌Multiple-ForgeStore(143)|TrickyStore(248), Root: ❌Multiple-APatch(11224)|KernelSU(32525), Integrity: ⚠️This build is unsigned, Service: ❌All service will not start]`
 - Display zh-Hans or en-US based on the system language: User-visible part
   - Force en-US: Create `/data/adb/fs_enhancer_extreme/config/english` empty file
 

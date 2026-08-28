@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.xtrlumen.vbmeta.attestation;
+package com.xtrlumen.vbmeta.attestation;
 
-import io.github.xtrlumen.vbmeta.log;
+import com.xtrlumen.vbmeta.log;
 
 import com.google.common.io.BaseEncoding;
 

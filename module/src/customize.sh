@@ -86,16 +86,16 @@ operate() {
     fi
 }
 print_cn() {
-    ${IS_ZHCN} && operate true "${1}"
+    ${IS_ZHCN} && operate true "${*}"
 }
 print_en() {
-    ${IS_ZHCN} || operate true "${1}"
+    ${IS_ZHCN} || operate true "${*}"
 }
 abort_cn() {
-    ${IS_ZHCN} && operate false "${1}"
+    ${IS_ZHCN} && operate false "${*}"
 }
 abort_en() {
-    ${IS_ZHCN} || operate false "${1}"
+    ${IS_ZHCN} || operate false "${*}"
 }
 overlayfs_abort() {
     separator_print

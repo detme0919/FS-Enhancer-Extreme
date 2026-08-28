@@ -1,4 +1,4 @@
-package io.github.xtrlumen.vbmeta.attestation;
+package com.xtrlumen.vbmeta.attestation;
 
 class EatClaim {
     public static final int BOOT_STATE = -76003;

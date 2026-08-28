@@ -13,9 +13,9 @@
  * Copyright (C) 2025-2026 XtrLumen
  */
 
-package io.github.xtrlumen.vbmeta;
+package com.xtrlumen.vbmeta;
 
-import io.github.xtrlumen.vbmeta.log;
+import com.xtrlumen.vbmeta.log;
 
 import android.content.ContentValues;
 import android.content.ContentProvider;
@@ -39,8 +39,8 @@ import java.security.spec.ECGenParameterSpec;
 
 import com.google.common.io.BaseEncoding;
 
-import io.github.xtrlumen.vbmeta.attestation.Attestation;
-import io.github.xtrlumen.vbmeta.attestation.RootOfTrust;
+import com.xtrlumen.vbmeta.attestation.Attestation;
+import com.xtrlumen.vbmeta.attestation.RootOfTrust;
 
 public class Entry extends ContentProvider {
     private RootOfTrust loadRootOfTrust() throws Exception {

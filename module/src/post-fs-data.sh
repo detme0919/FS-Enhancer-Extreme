@@ -17,10 +17,8 @@ cd "${0%/*}"
 source './script/util_functions.sh'
 rotation
 
-logI '收集运行环境'
-invoke envcollect
+invoke envcollect >> "${FSEELOG}" 2>&1
 initial
 intercept
 
-logI '处理冲突模块'
 invoke modcheck

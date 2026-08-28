@@ -46,13 +46,13 @@ output() {
     echo "`date '+%m-%d %H:%M:%S.%3N'`  ${$}  ${$} ${1} [FSEE]  : ${LOG_TAG} ${2}" >> "${FSEELOG}"
 }
 logI() {
-    output 'I' "${1}"
+    output 'I' "${*}"
 }
 logW() {
-    output 'W' "${1}"
+    output 'W' "${*}"
 }
 logE() {
-    output 'E' "${1}"
+    output 'E' "${*}"
 }
 rotation() {
     rm -rf "${OLDLOG}"
@@ -100,11 +100,12 @@ initwait() {
     done
 }
 invoke() {
-    if fseec ${@} >> "${FSEELOG}" 2>&1
+    logI "fseec(\"${*}\")"
+    if fseec ${@}
     then
-        logI "Ok(${@})"
+        logI "Ok(\"${*}\")"
     else
-        logW "Err(${@})"
+        logW "Err(\"${*}\")"
     fi
 }
 ##END##

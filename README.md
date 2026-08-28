@@ -19,18 +19,18 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 ## 功能
 ### 主要
 - `libc::inotify*`实时监控
-  - 对冲突模块添加移除标签/强制删除；检测到冲突软件时直接卸载
+  - 对冲突模块添加移除标签/强制删除；检测到冲突应用时直接卸载
   - 接管 ForgeStore 模块 target.txt ，优先级高于任何类似模块
 - 设备启动时
-  - 将自定义安全补丁级别同步到 prop
-  - 重设引导加载程序解锁状态相关 prop 为锁定
-  - 获取正确 VerifiedBootHash prop 并重设
+  - 从自定义安全补丁级别配置重设对应 prop
+  - 重设引导加载程序解锁状态相关 prop 为锁定值
+  - 获取正确 VerifiedBootHash 以重设对应 prop
 
 ### 其他
 - 规避异常环境
 - 在模块描述显示详细仪表盘，例:  
-`[根实现: ✅APatch(11224), 主模块: ✅TrickyStoreOSS(155), 完整性: ✅通过验证, 服务: ✅运行中]`  
-`[根实现: ❌多重共存-APatch(11224)|KernelSU(32525), 主模块: ❌多重共存-ForgeStore(143)|TrickyStore(248), 完整性: ⚠️本次构建未签名, 服务: ❌所有服务将不会启动]`
+`[主模块: ✅TrickyStoreOSS(155), 根实现: ✅APatch(11224), 完整性: ✅通过验证, 服务: ✅运行中]`  
+`[主模块: ❌多重共存-ForgeStore(143)|TrickyStore(248), 根实现: ❌多重共存-APatch(11224)|KernelSU(32525), 完整性: ⚠️本次构建未签名, 服务: ❌所有服务将不会启动]`
 - 根据系统语言分别显示 zh-Hans 或 en-US : 用户可见部分
   - 强制 en-US : 创建 `/data/adb/fs_enhancer_extreme/config/english` 空文件
 

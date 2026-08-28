@@ -124,7 +124,7 @@ pub fn entry() -> anyhow::Result<()> {
                 false
             };
             log::info("卸载服务");
-            pm_uninstall("io.github.xtrlumen.vbmeta");
+            pm_uninstall("com.xtrlumen.vbmeta");
 
             is_success
         } else {

@@ -9,11 +9,11 @@ import {
 } from '../define';
 
 const body: HTMLBodyElement = document.querySelector('body')!;
-const navButtons: HTMLCollection = body.children[1].children;
-const swipeTrack: Element = body.children[0].children[0];
+const navButtons: HTMLCollection = body.nth(2).children;
+const swipeTrack: HTMLElement = body.nth(1).nth(1) as HTMLElement;
 
 const loadedPages: Set<PagesKey> = new Set<PagesKey>();
-let currentPage: PagesKey | null = null;
+let currentPage: PagesKey;
 
 function switchPage(pageName: PagesKey) {
     if (pageName === currentPage) return
@@ -36,17 +36,17 @@ function switchPage(pageName: PagesKey) {
         ?
             'var(--var-theme-color)'
         :
-            'var(--var-nav-button-color)'
+            'var(--var-not-selected-color)'
         ;
 
-        navButton.children[0].innerHTML = active
+        navButton.nth(1).innerHTML = active
         ?
             PAGE_STRUCT[navButton.id as PagesKey].nav.icon.filled
         :
             PAGE_STRUCT[navButton.id as PagesKey].nav.icon.regular
     }
 
-    (swipeTrack as HTMLElement).style.setProperty(
+    (swipeTrack).style.setProperty(
         '--var-displacement',
         `-${PAGE_LIST.indexOf(pageName) * 25}%`
     );
@@ -61,10 +61,10 @@ export function entry() {
     for (const navButton of navButtons) {
         const buttonId: PagesKey = navButton.id as PagesKey;
 
-        navButton.children[1].textContent = PAGE_STRUCT[buttonId].nav.text;
+        navButton.nth(2).textContent = PAGE_STRUCT[buttonId].nav.text;
 
         (navButton as HTMLElement).addEventListener('click', _ => switchPage(buttonId))
     }
 
-    switchPage('home');
+    switchPage('scope');
 }

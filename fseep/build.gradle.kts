@@ -15,7 +15,7 @@ val verCode:    Int by rootProject.extra
 val verHash: String by rootProject.extra
 
 android {
-    namespace = "io.github.xtrlumen.vbmeta"
+    namespace = "com.xtrlumen.vbmeta"
     buildToolsVersion = "36.0.0"
     compileSdk = 36
     defaultConfig {

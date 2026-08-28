@@ -13,7 +13,7 @@
  * Copyright (C) 2025-2026 XtrLumen
  */
 
-package io.github.xtrlumen.vbmeta;
+package com.xtrlumen.vbmeta;
 
 import android.util.Log;
 

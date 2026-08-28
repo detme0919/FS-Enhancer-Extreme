@@ -2,6 +2,16 @@ export type str = string;
 export type f64 = number;
 export type bool = boolean;
 
+declare global {
+    interface Element {
+        nth(index: f64): Element;
+    }
+}
+
+Element.prototype.nth = function(index: f64): Element {
+    return this.children[index - 1]
+};
+
 interface PageEntry {
     (element: HTMLElement): void | Promise<void>
 }
@@ -22,36 +32,36 @@ type Page = {
 
 type Pages = {
     home:     Page,
-    list:     Page,
-    invoke:   Page,
+    scope:     Page,
+    console:   Page,
     settings: Page
 }
 
 export type PagesKey = keyof Pages;
 
 import * as homePage     from './page/home';
-import * as listPage     from './page/list';
-import * as invokePage   from './page/invoke';
+import * as scopePage    from './page/scope';
+import * as consolePage  from './page/console';
 import * as settingsPage from './page/settings';
 
 import homeHtml     from '../html/home.html?raw';
-import listHtml     from '../html/list.html?raw';
-import invokeHtml   from '../html/invoke.html?raw';
+import scopeHtml    from '../html/scope.html?raw';
+import consoleHtml  from '../html/console.html?raw';
 import settingsHtml from '../html/settings.html?raw';
 
 import HOME_REGULAR     from '@fluentui/svg-icons/icons/home_28_regular.svg?raw';
 import HOME_FILLED      from '@fluentui/svg-icons/icons/home_28_filled.svg?raw';
-import LIST_REGULAR     from '@fluentui/svg-icons/icons/text_bullet_list_square_28_regular.svg?raw';
-import LIST_FILLED      from '@fluentui/svg-icons/icons/text_bullet_list_square_28_filled.svg?raw';
-import INVOKE_REGULAR   from '@fluentui/svg-icons/icons/puzzle_piece_28_regular.svg?raw';
-import INVOKE_FILLED    from '@fluentui/svg-icons/icons/puzzle_piece_28_filled.svg?raw';
+import SCOPE_REGULAR    from '@fluentui/svg-icons/icons/text_bullet_list_square_28_regular.svg?raw';
+import SCOPE_FILLED     from '@fluentui/svg-icons/icons/text_bullet_list_square_28_filled.svg?raw';
+import CONSOLE_REGULAR  from '@fluentui/svg-icons/icons/puzzle_piece_28_regular.svg?raw';
+import CONSOLE_FILLED   from '@fluentui/svg-icons/icons/puzzle_piece_28_filled.svg?raw';
 import SETTINGS_REGULAR from '@fluentui/svg-icons/icons/settings_28_regular.svg?raw';
 import SETTINGS_FILLED  from '@fluentui/svg-icons/icons/settings_28_filled.svg?raw';
 
 export const PAGE_STRUCT: Pages = {
     home: {
         layout: {
-            html: homeHtml,
+            html:  homeHtml,
             entry: homePage.entry
         },
         nav: {
@@ -62,35 +72,35 @@ export const PAGE_STRUCT: Pages = {
             text: '首页'
         }
     },
-    list: {
+    scope: {
         layout: {
-            html: listHtml,
-            entry: listPage.entry
+            html:  scopeHtml,
+            entry: scopePage.entry
         },
         nav: {
             icon: {
-                regular: LIST_REGULAR,
-                filled:  LIST_FILLED
+                regular: SCOPE_REGULAR,
+                filled:  SCOPE_FILLED
             },
-            text: '列表'
+            text: '作用域'
         }
     },
-    invoke: {
+    console: {
         layout: {
-            html: invokeHtml,
-            entry: invokePage.entry
+            html:  consoleHtml,
+            entry: consolePage.entry
         },
         nav: {
             icon: {
-                regular: INVOKE_REGULAR,
-                filled:  INVOKE_FILLED
+                regular: CONSOLE_REGULAR,
+                filled:  CONSOLE_FILLED
             },
-            text: '调用'
+            text: '控制台'
         }
     },
     settings: {
         layout: {
-            html: settingsHtml,
+            html:  settingsHtml,
             entry: settingsPage.entry
         },
         nav: {

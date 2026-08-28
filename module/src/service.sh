@@ -17,17 +17,11 @@ cd "${0%/*}"
 source './script/util_functions.sh'
 intercept
 
-logI '启动服务'
-fseec fseectl start || logE '服务启动失败'
+invoke fseectl start
 
 initwait
-logI '刷新目标列表'
 invoke listrefresh
-logI '处理冲突软件'
 invoke appcheck
-logI '将自定义安全补丁级别同步到 prop'
 invoke spsyncprop
-logI '重设引导加载程序解锁状态相关 prop 为锁定'
 invoke passprop
-logI '获取正确 VerifiedBootHash prop 并重设'
 invoke passvbhash
