@@ -43,7 +43,7 @@ impl Pointers {
         }
     }
     fn export() -> Self {
-        Pointers {
+        Self {
             verify:    Self::load_symbol("verify"),
             sigsegv:   Self::load_symbol("sigsegv"),
             log_raw:   Self::load_symbol("log_raw"),

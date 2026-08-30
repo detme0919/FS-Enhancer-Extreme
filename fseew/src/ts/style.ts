@@ -1,12 +1,14 @@
 import {
-    // TextArea,
-    // TextAreaDefinition,
-    TextInput,
-    TextInputDefinition,
-    Button,
-    ButtonDefinition,
     Switch,
     SwitchDefinition,
+    TextInput,
+    TextInputDefinition,
+    Badge,
+    BadgeDefinition,
+    Button,
+    ButtonDefinition,
+    // TextArea,
+    // TextAreaDefinition,
     Divider,
     DividerDefinition,
     setTheme
@@ -16,9 +18,10 @@ import {webLightTheme} from '@fluentui/tokens';
 
 export function entry() {
     setTheme(webLightTheme);
-    // TextArea.define(TextAreaDefinition);
-    TextInput.define(TextInputDefinition);
-    Button.define(ButtonDefinition);
     Switch.define(SwitchDefinition);
+    TextInput.define(TextInputDefinition);
+    Badge.define(BadgeDefinition);
+    Button.define(ButtonDefinition);
+    // TextArea.define(TextAreaDefinition);
     Divider.define(DividerDefinition);
 }

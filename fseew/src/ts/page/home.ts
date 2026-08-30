@@ -14,8 +14,7 @@ export async function entry(element: HTMLElement) {
 
     const stateCard: Element = main.nth(1);
 
-    const stateCardIcon: Element = stateCard.nth(1);
-    stateCardIcon.innerHTML = STATE_INIT;
+    stateCard.nth(1).outerHTML = STATE_INIT;
 
     const stateCardText: Element = stateCard.nth(2);
 
@@ -27,10 +26,10 @@ export async function entry(element: HTMLElement) {
 
     const {stdout} = await fseec(['fseectl', 'state']);
     if (stdout.includes('not running')) {
-        stateCardIcon.innerHTML = STATE_ERROR
+        stateCard.nth(1).outerHTML = STATE_ERROR
         stateCardE1.innerHTML = '服务未运行';
     } else if (stdout.includes('running')) {
-        stateCardIcon.innerHTML = STATE_NORMAL
+        stateCard.nth(1).outerHTML = STATE_NORMAL
         stateCardE1.innerHTML = '服务运行中';
     }
     stateCardE2.innerHTML = '1.0.0 (110-47970cb-release)';

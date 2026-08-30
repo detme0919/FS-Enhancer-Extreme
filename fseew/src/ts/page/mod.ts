@@ -30,7 +30,7 @@ function switchPage(pageName: PagesKey) {
     }
 
     for (const navButton of navButtons) {
-        const active: bool = (navButton.id === pageName);
+        const active: bool = navButton.id === pageName;
 
         (navButton as HTMLElement).style.color = active
         ?
@@ -39,14 +39,14 @@ function switchPage(pageName: PagesKey) {
             'var(--var-not-selected-color)'
         ;
 
-        navButton.nth(1).innerHTML = active
+        navButton.nth(1).outerHTML = active
         ?
             PAGE_STRUCT[navButton.id as PagesKey].nav.icon.filled
         :
             PAGE_STRUCT[navButton.id as PagesKey].nav.icon.regular
     }
 
-    (swipeTrack).style.setProperty(
+    swipeTrack.style.setProperty(
         '--var-displacement',
         `-${PAGE_LIST.indexOf(pageName) * 25}%`
     );

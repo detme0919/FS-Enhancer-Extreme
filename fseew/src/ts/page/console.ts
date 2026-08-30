@@ -1,4 +1,6 @@
 export function entry(element: HTMLElement) {
+    element.nth(1).nth(1).innerHTML = '控制台';
+
     const main: Element = element.nth(2);
 
     const logCard: Element = main.nth(1);

@@ -72,7 +72,7 @@ fn root_collect() {
                 identity: String::from(identity),
                 version_code: format!("{}", version_code)
             }
-        },
+        }
         _ => {
             let multiple_type: Vec<String> = collect_result.iter().map(|(identity, version_code)|
                 format!("{}({})", identity, version_code)
@@ -172,7 +172,7 @@ pub fn entry() {
         write(path, format!("{}\n{}\n{}", env.multiple, env.identity, env.version_code), false);
 
         println!(
-            "[Multiple: \"{}\", Identity: \"{}\", VersionCode: \"{}\"]",
+            "{{Multiple: \"{}\", Identity: \"{}\", VersionCode: \"{}\"}}",
             env.multiple, env.identity, env.version_code,
         )
     }

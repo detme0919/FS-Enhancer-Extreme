@@ -28,7 +28,10 @@ use std::{
     process,
     path::Path,
     fmt::Display,
-    os::fd::AsRawFd,
+    os::{
+        fd::AsRawFd,
+        raw::c_char
+    },
     io::{
         Error,
         Result
@@ -39,7 +42,6 @@ use std::{
     }
 };
 
-use libc::c_char;
 use anyhow::{
     anyhow,
     ensure
@@ -103,10 +105,9 @@ pub fn pidof(name: &str) -> Option<i32> {
 }
 
 pub fn kill(pid: i32) -> anyhow::Result<()> {
-    let return_type = unsafe {
+    if unsafe {
         libc::kill(pid, libc::SIGKILL)
-    };
-    if return_type == 0 {
+    } == 0 {
         Ok(())
     } else {
         log::error(&format!("kill调用失败: {}", Error::last_os_error()));
@@ -153,7 +154,7 @@ fn intercept_log_and_pass_through_err(result: Result<process::Output>, command: 
 }
 
 unsafe extern "C" {
-    fn __system_property_get(__name: *const c_char, __value: *mut c_char) -> u32;
+    fn __system_property_get(__name: *const c_char, __value: *mut c_char) -> i32;
 }
 
 pub fn getprop(prop: &str) -> String {
@@ -239,7 +240,7 @@ pub fn pm_path(arg: &str, crash: bool) -> anyhow::Result<bool> {
                 intercept_log_err(&success, false);
                 Ok(false)
             }
-        },
+        }
         Err(error) => if crash {
             Err(error.into())
         } else {
@@ -249,9 +250,9 @@ pub fn pm_path(arg: &str, crash: bool) -> anyhow::Result<bool> {
     }
 }
 
-pub fn read_to_string(path: &Path) -> anyhow::Result<String> {
-    fs::read_to_string(path).map_err(|error|{
-        log::error(&format!("{} 读取失败: {}", path.display(), error));
+pub fn read_to_string(path: impl AsRef<Path>) -> anyhow::Result<String> {
+    fs::read_to_string(&path).map_err(|error|{
+        log::error(&format!("{} 读取失败: {}", path.as_ref().display(), error));
         error.into()
     })
 }

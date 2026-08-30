@@ -20,15 +20,16 @@ use crate::{
         ENV_NORMAL
     },
     envcollect,
+    api,
     bridge,
     conflict,
     ctl,
     description,
     keybox,
-    packagelist,
     passprop,
     passvbhash,
     securitypatch,
+    targetlist,
     util_functions,
     webui
 };
@@ -40,12 +41,74 @@ use clap::{
     Subcommand
 };
 
+#[derive(Subcommand)]
+enum PackageType {
+    /// Return system packages list
+    Sys,
+    /// Return third party packages list
+    Usr
+}
+
+#[derive(Subcommand)]
+enum Display {
+    /// Return selinux enforcing status
+    Ses,
+    /// Return android version
+    Av,
+    /// Return device architecture
+    Ac,
+    /// Return kernel version
+    Kv,
+    /// Return system fingerprint
+    Fp,
+}
+
+#[derive(Subcommand)]
+enum Api {
+    /// Package list
+    List {
+        #[command(subcommand)]
+        command: PackageType
+    },
+    /// Necessity information
+    Info {
+        #[command(subcommand)]
+        command: Display
+    }
+}
+
+#[derive(Subcommand)]
+enum Ctl {
+    /// Restart service process
+    Restart,
+    /// Start   service process
+    Start,
+    /// Stop    service process
+    Stop,
+    /// Get     service running status
+    State,
+}
+
+#[derive(Subcommand)]
+enum Manager {
+    /// Use built-in keybox
+    Builtin,
+    /// Use external keybox
+    Import {
+        /// Path to external keybox file
+        path: String
+    }
+}
+
 /// FS Enhancer Extreme CLI
 #[derive(Parser)]
 #[command(version = VERSION_NAME)]
 enum Commands {
-    /// For webUI Invoke
-    Api,
+    /// For WebUI Invoke
+    Api {
+        #[command(subcommand)]
+        command: Api
+    },
     /// Operation Forge Store service
     Fsctl {
         #[command(subcommand)]
@@ -83,29 +146,6 @@ enum Commands {
     }
 }
 
-#[derive(Subcommand)]
-enum Ctl {
-    /// Restart service process
-    Restart,
-    /// Start   service process
-    Start,
-    /// Stop    service process
-    Stop,
-    /// Get     service running status
-    State,
-}
-
-#[derive(Subcommand)]
-enum Manager {
-    /// Use built-in keybox
-    Builtin,
-    /// Use external keybox
-    Import {
-        /// Path to external keybox file
-        path: String
-    }
-}
-
 pub fn entry() -> anyhow::Result<()> {
     let args = Commands::parse();
 
@@ -115,22 +155,30 @@ pub fn entry() -> anyhow::Result<()> {
 
     util_functions::switch_mnt_namespace()?;
     match args {
-        Commands::Api => Ok(()),
-        Commands::Fsctl {command} => {
-            match command {
-                Ctl::Restart => ctl::fs_restart(),
-                Ctl::Start => ctl::fs_start(),
-                Ctl::Stop => ctl::fs_stop(),
-                Ctl::State => ctl::fs_state()
+        Commands::Api {command} => match command {
+            Api::List {command} => match command {
+                PackageType::Sys => api::system_package(),
+                PackageType::Usr => api::user_package()
+            },
+            Api::Info {command} => match command {
+                Display::Ses => api::getenforce(),
+                Display::Av => api::android_version(),
+                Display::Ac => api::device_arch(),
+                Display::Kv => api::kernel_version(),
+                Display::Fp => api::fingerprint()
             }
         }
-        Commands::Fseectl {command} => {
-            match command {
-                Ctl::Restart => ctl::fsee_restart(),
-                Ctl::Start => ctl::fsee_start(),
-                Ctl::Stop => ctl::fsee_stop(),
-                Ctl::State => ctl::fsee_state()
-            }
+        Commands::Fsctl {command} => match command {
+            Ctl::Restart => ctl::fs_restart(),
+            Ctl::Start => ctl::fs_start(),
+            Ctl::Stop => ctl::fs_stop(),
+            Ctl::State => ctl::fs_state()
+        }
+        Commands::Fseectl {command} => match command {
+            Ctl::Restart => ctl::fsee_restart(),
+            Ctl::Start => ctl::fsee_start(),
+            Ctl::Stop => ctl::fsee_stop(),
+            Ctl::State => ctl::fsee_state()
         }
         Commands::Envcheck => {
             if !*ENV_NORMAL {
@@ -138,13 +186,13 @@ pub fn entry() -> anyhow::Result<()> {
             }
 
             Ok(())
-        },
+        }
         Commands::Appcheck => conflict::app_process(),
         Commands::Modcheck(conflict_args) => {
             conflict::route(conflict_args);
 
             Ok(())
-        },
+        }
         Commands::Passprop => passprop::entry(),
         Commands::Passvbhash => passvbhash::entry(),
         Commands::Startwebui => webui::start(),
@@ -153,14 +201,12 @@ pub fn entry() -> anyhow::Result<()> {
             envcollect::entry();
 
             Ok(())
-        },
+        }
         Commands::Descrefresh(conflict_args) => description::refresh(conflict_args),
-        Commands::Listrefresh => packagelist::refresh(),
-        Commands::Keybox {command} => {
-            match command {
-                Manager::Builtin => keybox::extract(),
-                Manager::Import {path} => keybox::transfer(path)
-            }
+        Commands::Listrefresh => targetlist::refresh(),
+        Commands::Keybox {command} => match command {
+            Manager::Builtin => keybox::extract(),
+            Manager::Import {path} => keybox::transfer(path)
         }
     }
 }

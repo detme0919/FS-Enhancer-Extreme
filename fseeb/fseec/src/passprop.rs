@@ -24,9 +24,10 @@ use crate::{
     }
 };
 
-use std::ffi::CString;
-
-use libc::c_int;
+use std::{
+    ffi::CString,
+    os::raw::c_int
+};
 
 fn check_missing_match_prop(prop: &[&str]) -> anyhow::Result<()> {
     let value: String = getprop(prop[0]);

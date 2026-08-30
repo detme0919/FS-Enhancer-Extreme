@@ -23,6 +23,7 @@ FSEEDIR=${ADB}/fs_enhancer_extreme
 OLDLOG=${FSEEDIR}/log.old
 LOGDIR=${FSEEDIR}/log
 FSEELOG=${LOGDIR}/log.log
+INTERCEPT=${FSEEDIR}/intercept
 #OTHER#
 LOG_TAG='<Undefined>'
 case "${0##*/}" in
@@ -54,14 +55,15 @@ logW() {
 logE() {
     output 'E' "${*}"
 }
-rotation() {
+first_initial() {
     rm -rf "${OLDLOG}"
     mv -f "${LOGDIR}" "${OLDLOG}"
     mkdir -p "${LOGDIR}"
     touch "${FSEELOG}"
     logI '完成日志轮换'
+    rm -f "${INTERCEPT}"
 }
-initial() {
+last_initial() {
     [ -x "${ADB}/service.d/.fsee_state.sh" ] || {
         logI '配置描述文件刷新脚本'
         mkdir -p "${ADB}/service.d"
@@ -83,12 +85,13 @@ initial() {
         fi
     else
         logE '环境异常'
+        touch "${INTERCEPT}"
         mv -f "${FSEEMODDIR}/webroot" "${FSEEMODDIR}/other/webroot" > /dev/null 2>&1
         action_disable
     fi
 }
 intercept() {
-    fseec envcheck || {
+    [ -f "${INTERCEPT}" ] && {
         logE '拦截执行'
         exit
     }

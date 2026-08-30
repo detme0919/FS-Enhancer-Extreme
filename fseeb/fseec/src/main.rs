@@ -17,6 +17,7 @@
 #![feature(try_blocks)]
 
 mod envcollect;
+mod api;
 mod bridge;
 mod cli;
 mod conflict;
@@ -24,10 +25,10 @@ mod ctl;
 mod define;
 mod description;
 mod keybox;
-mod packagelist;
 mod passprop;
 mod passvbhash;
 mod securitypatch;
+mod targetlist;
 mod util_functions;
 mod webui;
 

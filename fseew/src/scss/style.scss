@@ -12,9 +12,9 @@ html, body {
 
 html {
     // 状态栏高度
-    --const-top-inset: var(--window-inset-top, 0px);
+    --const-top-inset: var(--window-inset-top);
     // 手势栏高度
-    --const-bottom-inset: var(--window-inset-bottom, 0px);
+    --const-bottom-inset: var(--window-inset-bottom);
     // 子页面个数
     --const-page-count: var(--var-page-count, 4);
     // 边界线
@@ -82,6 +82,10 @@ body {
 
                 // 顶栏
                 > header {
+                    // 顶栏总高度
+                    $header-height: 65px;
+                    // 总高度
+                    height: $header-height;
                     // 兼容部分管理器
                     box-sizing: content-box;
                     // 启用弹性布局支持
@@ -90,8 +94,6 @@ body {
                     flex-direction: row;
                     // 背景色
                     background-color: var(--var-background-upper-color);
-                    // 总高度
-                    height: 65px;
                     // 底部边界线
                     border-bottom: 1px solid var(--var-border-color);
                     // 上内边距       状态栏避让
@@ -110,14 +112,39 @@ body {
                     // 大标题
                     > h1 {
                         // 左外边距
-                        margin-left: 17px;
+                        margin-left: $header-height * 0.275;
                         // 字体尺寸
                         font-size: 22.5px;
                         // 字重
                         font-weight: 400;
-                        // 行高
-                        line-height: 28px;
                     }
+
+                    // 搜索框
+                    > fluent-text-input {
+                        $margin-lr: 8.125px;
+                        // 占满全部空间
+                        flex: 1;
+                        // 垂直居中
+                        align-self: center;
+                        // 左外边距
+                        margin-left: $margin-lr;
+                        // 右外边距
+                        margin-right: $margin-lr;
+                        // 内部输入框根容器高度
+                        &::part(root) {
+                            // 总高度
+                            height: 48px;
+                        }
+                    }
+                }
+
+                @mixin edge-base {
+                    // 背景色
+                    background-color: var(--var-background-upper-color);
+                    // 圆角
+                    border-radius: 4px;
+                    // 阴影
+                    box-shadow: 0px 1.5px 2.5px rgba(0, 0, 0, 15%);
                 }
 
                 &#home_page > main {
@@ -126,13 +153,9 @@ body {
                         // 启用弹性布局支持
                         display: flex;
                         // 全外边距
-                        margin: 4%;
-                        // 背景色
-                        background-color: var(--var-background-upper-color);
-                        // 圆角
-                        border-radius: 4px;
-                        // 阴影
-                        box-shadow: 0px 1.5px 2.5px rgba(0, 0, 0, 15%);
+                        margin: 15.875px;
+                        // 导入风格封装
+                        @include edge-base;
 
                         > * {
                             > :nth-child(1) {
@@ -163,7 +186,7 @@ body {
                         align-items: center;
 
                         // 状态图标
-                        > :nth-child(1) > svg {
+                        > :nth-child(1) {
                             // 启用弹性布局支持
                             display: flex;
                             // 左外边距
@@ -213,17 +236,85 @@ body {
                     }
                 }
 
-                &#scope_page {
-                    // 搜索框
-                    > header > fluent-text-input {
-                        // 总高度
-                        height: 48px;
-                        // 占满全部宽度
-                        flex: 1;
+                &#scope_page > main > * {
+                    // 启用弹性布局支持
+                    display: flex;
+                    // 横向排列子元素
+                    flex-direction: row;
+                    // 单行总高度
+                    $short-line-height: 88px;
+                    // 总高度
+                    height: $short-line-height;
+                    // 全外边距
+                    margin: 8.125px;
+                    // 垂直居中
+                    align-items: center;
+                    // 导入风格封装
+                    @include edge-base;
+
+                    // Option<img>
+                    > img {
+                        // 禁止收缩
+                        flex-shrink: 0;
                         // 左外边距
-                        margin-left: 12px;
+                        margin-left: $short-line-height * 0.2;
+                        // 高度
+                        height: $short-line-height * 0.6;
+                        // 宽度
+                        width: $short-line-height * 0.6;
+                    }
+
+                    > div {
+                        // 纵向排列子元素
+                        flex-direction: column;
+                        // 左外边距
+                        margin-left: $short-line-height * 0.18;
+                        // 推到最右
+                        margin-right: auto;
+                        // 裁剪溢出
+                        overflow: hidden;
+
+                        > *:not(fluent-badge) {
+                            // 禁止换行
+                            white-space: nowrap;
+                            // 裁剪溢出
+                            overflow: hidden;
+                            // 显示省略号
+                            text-overflow: ellipsis;
+                        }
+
+                        > :nth-child(1) {
+                            // 字体尺寸
+                            font-size: 16px;
+                        }
+
+                        > :nth-child(2) {
+                            // 覆盖色
+                            color: var(--var-not-selected-color);
+                            // 字体尺寸
+                            font-size: 14px;
+                            // 字重
+                            font-weight: 350;
+                            // 左外边距
+                            margin-left: 0.2px;
+                            // 下外边距
+                            margin-bottom: 4px;
+                        }
+
+                        > fluent-badge {
+                            // 左外边距
+                            margin-left: 0.55px;
+                        }
+                    }
+
+                    // 开关
+                    > fluent-switch {
+                        // 禁止收缩
+                        flex-shrink: 0;
+                        // 左外边距
+                        margin-left: $short-line-height * 0.35;
                         // 右外边距
-                        margin-right: 12px;
+                        margin-right: $short-line-height * 0.4;
                     }
                 }
 
@@ -239,14 +330,10 @@ body {
                     // 纵向排列子元素
                     flex-direction: column;
                     // 全外边距
-                    margin: 4%;
-                    // 背景色
-                    background-color: var(--var-background-upper-color);
-                    // 圆角
-                    border-radius: 4px;
-                    // 阴影
-                    box-shadow: 0px 1.5px 2.5px rgba(0, 0, 0, 15%);
-                    // 裁剪溢出直角
+                    margin: 15.875px;
+                    // 导入风格封装
+                    @include edge-base;
+                    // 裁剪溢出
                     overflow: hidden;
 
                     // 名称
@@ -271,6 +358,8 @@ body {
                         padding-right: $control-card-padding;
                         // 任意字符间换行
                         word-break: break-all;
+                        // 覆盖色
+                        color: var(--var-not-selected-color);
                         // 字体尺寸
                         font-size: 15px;
                         // 字重
@@ -304,42 +393,36 @@ body {
                     // 开始分割线
                     > fluent-divider:nth-child(1) {
                         // 上外边距
-                        margin-top: 8px;
+                        margin-top: 7.75px;
                     }
 
                     // 末尾分割线
                     > fluent-divider:last-child {
                         // 下外边距
-                        margin-bottom: 8px;
+                        margin-bottom: 7.75px;
                     }
 
                     // 设置条目
                     > *:not(fluent-divider) {
-                        // 总高度
-                        $setting-line-height: 72.5px;
-                        // 总高度
-                        height: $setting-line-height;
                         // 启用弹性布局支持
                         display: flex;
                         // 纵向排列子元素
                         flex-direction: row;
+                        // 单行总高度
+                        $short-line-height: 72.5px;
+                        // 总高度
+                        height: $short-line-height;
+                        // 全外边距
+                        margin: 8.125px;
                         // 垂直居中
                         align-items: center;
-                        // 全外边距
-                        margin: $setting-line-height * 0.1125;
-                        // 背景色
-                        background-color: var(--var-background-upper-color);
-                        // 圆角
-                        border-radius: 4px;
-                        // 阴影
-                        box-shadow: 0px 1.5px 2.5px rgba(0, 0, 0, 15%);
+                        // 导入风格封装
+                        @include edge-base;
 
                         // 图标
-                        > :nth-child(1) > svg {
-                            // 上外边距
-                            margin-top: $setting-line-height * 0.07;
+                        > :nth-child(1) {
                             // 左外边距
-                            margin-left: $setting-line-height * 0.25;
+                            margin-left: $short-line-height * 0.25;
                             // 高度
                             height: 36px;
                             // 宽度
@@ -349,14 +432,12 @@ body {
                         // 单元
                         > :nth-child(2) {
                             // 左外边距
-                            margin-left: $setting-line-height * 0.2;
+                            margin-left: $short-line-height * 0.2;
                             // 推到最右
                             margin-right: auto;
 
                             // 主
                             > :nth-child(1) {
-                                // 任意字符间换行
-                                word-break: break-all;
                                 // 字体尺寸
                                 font-size: 16px;
                             }
@@ -377,9 +458,9 @@ body {
                             // 禁止收缩
                             flex-shrink: 0;
                             // 左外边距
-                            margin-left: $setting-line-height * 0.35;
+                            margin-left: $short-line-height * 0.35;
                             // 右外边距
-                            margin-right: $setting-line-height * 0.4;
+                            margin-right: $short-line-height * 0.4;
                         }
                     }
                 }
@@ -389,14 +470,16 @@ body {
 
     // 底栏
     > nav {
+        // 底栏总高度
+        $nav-height: 80px;
+        // 总高度
+        height: $nav-height;
         // 启用弹性布局支持
         display: flex;
         // 横向排列子元素
         flex-direction: row;
         // 背景色
         background-color: var(--var-background-upper-color);
-        // 总高度
-        height: 80px;
         // 顶部边界线
         border-top: 1px solid var(--var-border-color);
         // 下内边距          手势栏避让
@@ -409,7 +492,7 @@ body {
             // 清除边框
             border: none;
             // 上内边距
-            padding-top: 18px;
+            padding-top: $nav-height * 0.225;
             // 占满全部宽度
             flex: 1;
             // 启用弹性布局支持
@@ -422,9 +505,11 @@ body {
             color: var(--var-not-selected-color);
 
             // 图标
-            > :nth-child(1) > svg {
+            > :nth-child(1) {
                 // 填充色
                 fill: currentColor;
+                // 下外边距
+                margin-bottom: 4px;
             }
 
             // 字体

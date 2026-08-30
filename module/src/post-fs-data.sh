@@ -15,10 +15,11 @@
 
 cd "${0%/*}"
 source './script/util_functions.sh'
-rotation
+first_initial
 
 invoke envcollect >> "${FSEELOG}" 2>&1
-initial
+last_initial
+
 intercept
 
 invoke modcheck
