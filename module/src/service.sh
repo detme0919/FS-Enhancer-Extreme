@@ -22,6 +22,6 @@ invoke fseectl start
 initwait
 invoke listrefresh
 invoke appcheck
-invoke spsyncprop
 invoke passprop
-invoke passvbhash
+invoke spsyncprop --boot
+invoke passvbhash --boot

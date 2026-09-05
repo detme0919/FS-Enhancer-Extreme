@@ -7,8 +7,6 @@ import {
     BadgeDefinition,
     Button,
     ButtonDefinition,
-    // TextArea,
-    // TextAreaDefinition,
     Divider,
     DividerDefinition,
     setTheme
@@ -16,12 +14,11 @@ import {
 
 import {webLightTheme} from '@fluentui/tokens';
 
-export function entry() {
+export async function entry() {
     setTheme(webLightTheme);
-    Switch.define(SwitchDefinition);
-    TextInput.define(TextInputDefinition);
-    Badge.define(BadgeDefinition);
-    Button.define(ButtonDefinition);
-    // TextArea.define(TextAreaDefinition);
-    Divider.define(DividerDefinition);
+    await Switch.define(SwitchDefinition);
+    await TextInput.define(TextInputDefinition);
+    await Badge.define(BadgeDefinition);
+    await Button.define(ButtonDefinition);
+    await Divider.define(DividerDefinition);
 }

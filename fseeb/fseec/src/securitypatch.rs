@@ -15,16 +15,19 @@
 
 use crate::{
     define::{
-        ABNORMAL_ENV,
-        ENV_NORMAL,
+        SKIP_SPSYNC,
         FINAL_MAIN_MODULE_CONFIG
     },
     util_functions::{
         pidof,
-        kill,
+        sigkill,
         resetprop,
-        read_to_string
+        read_to_string,
+        create_file,
+        delete_file,
+        setting_get_positive
     },
+    cli::Mode,
     bridge::log
 };
 
@@ -35,48 +38,61 @@ use std::{
 
 use regex_lite::Regex;
 
-pub fn sync() -> anyhow::Result<()> {
-    if *ENV_NORMAL {
-        let security_patch_full_path = format!("{}/security_patch.txt", *FINAL_MAIN_MODULE_CONFIG);
-        let security_patch_file = Path::new(&security_patch_full_path);
-        if !security_patch_file.exists() {
-            log::warn("文件不存在");
+pub fn sync(mode: Mode) -> anyhow::Result<()> {
+    if mode.boot && Path::new(SKIP_SPSYNC).exists() {
+        log::info("跳过: 同步安全补丁级别");
+        process::exit(1)
+    }
+
+    let security_patch_full_path = format!("{}/security_patch.txt", *FINAL_MAIN_MODULE_CONFIG);
+    let security_patch_file = Path::new(&security_patch_full_path);
+    if !security_patch_file.exists() {
+        log::warn("文件不存在");
+        process::exit(1)
+    }
+    if let Ok(success) = read_to_string(security_patch_file) {
+        if success.is_empty() {
+            log::warn("解析失败");
             process::exit(1)
         }
-        if let Ok(success) = read_to_string(security_patch_file) {
-            if success.is_empty() {
-                log::warn("解析失败");
-                process::exit(1)
-            }
-            let date = if Regex::new(r"^\d{4}-\d{2}-\d{2}$")?.is_match(&success) {
-                Some(success)
-            } else if Regex::new(r"^\d{8}$")?.is_match(&success) {
-                Some(format!(
-                    "{}-{}-{}",
-                    &success[0..4],
-                    &success[4..6],
-                    &success[6..8]
-                ))
-            } else {
-                None
-            };
-            if let Some(date) = date {
-                resetprop(&["ro.vendor.build.security_patch", &date])?;
-                resetprop(&["ro.build.version.security_patch", &date])?;
+        let date = if Regex::new(r"^\d{4}-\d{2}-\d{2}$")?.is_match(&success) {
+            Some(success)
+        } else if Regex::new(r"^\d{8}$")?.is_match(&success) {
+            Some(format!(
+                "{}-{}-{}",
+                &success[0..4],
+                &success[4..6],
+                &success[6..8]
+            ))
+        } else {
+            None
+        };
+        if let Some(date) = date {
+            resetprop(&["ro.vendor.build.security_patch", &date])?;
+            resetprop(&["ro.build.version.security_patch", &date])?;
 
-                if let Some(pid) = pidof("com.google.android.gms.unstable") {
-                    kill(pid)?;
-                }
-
-                log::info("同步完毕");
-            } else {
-                log::error("格式错误");
-                process::exit(1)
+            if let Some(pid) = pidof("com.google.android.gms.unstable") {
+                sigkill(pid)?
             }
+
+            log::info("同步完毕")
+        } else {
+            log::error("格式错误");
+            process::exit(1)
         }
-    } else {
-        println!("{}", ABNORMAL_ENV)
     }
 
     Ok(())
+}
+
+pub fn spsync_on() {
+    delete_file(SKIP_SPSYNC)
+}
+
+pub fn spsync_off() {
+    create_file(SKIP_SPSYNC)
+}
+
+pub fn spsync_get() -> ! {
+    setting_get_positive(SKIP_SPSYNC)
 }

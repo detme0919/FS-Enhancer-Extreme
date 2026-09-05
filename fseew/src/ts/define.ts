@@ -1,14 +1,10 @@
-export type str = string;
-export type f64 = number;
-export type bool = boolean;
-
 declare global {
     interface Element {
-        nth(index: f64): Element;
+        nth(index: number): Element;
     }
 }
 
-Element.prototype.nth = function(index: f64): Element {
+Element.prototype.nth = function(index: number): Element {
     return this.children[index - 1]
 };
 
@@ -18,22 +14,22 @@ interface PageEntry {
 
 type Page = {
     layout: {
-        html: str,
+        html: string,
         entry: PageEntry
     },
     nav: {
         icon: {
-            regular: str,
-            filled:  str
+            regular: string,
+            filled:  string
         },
-        text: str
+        text: string
     }
 }
 
 type Pages = {
     home:     Page,
-    scope:     Page,
-    console:   Page,
+    scope:    Page,
+    console:  Page,
     settings: Page
 }
 
@@ -115,4 +111,5 @@ export const PAGE_STRUCT: Pages = {
 
 export const PAGE_LIST: PagesKey[] = Object.keys(PAGE_STRUCT) as PagesKey[];
 
-export const FSEEMODDIR: str = "/data/adb/modules/fs_enhancer_extreme";
+export const FSEEMODDIR: string = '/data/adb/modules/fs_enhancer_extreme';
+export const LINK_PREFIX: string = 'https://github.com/XtrLumen/FS-Enhancer-Extreme';

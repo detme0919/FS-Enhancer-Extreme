@@ -22,10 +22,13 @@ ADB=/data/adb
 MODULESDIR=${ADB}/modules
 #TWO LEVEL#
 FSEECONFIG=${ADB}/fs_enhancer_extreme/config
+#THREE LEVEL#
+APPEND_FILE=${FSEECONFIG}/append
+REMOVE_FILE=${FSEECONFIG}/remove
 #PUBLIC#
 IS_ZHCN=false
 DESC_REBOOT='Need Reboot'
-[ ! -f "${FSEECONFIG}/english" ] && [[ "`getprop persist.sys.locale`" == *'zh'* || "`getprop ro.product.locale`" == *'zh'* ]] && {
+[ ! -f "${FSEECONFIG}/setting/force_english" ] && [[ "`getprop persist.sys.locale`" == *'zh'* || "`getprop ro.product.locale`" == *'zh'* ]] && {
     IS_ZHCN=true
     DESC_REBOOT='需要重启'
 }
@@ -54,12 +57,12 @@ ${MODPATH}/bin/fseec
 ${MODPATH}/bin/fsees
 ${ADB}/service.d/.fsee_state.sh
 "
-SYS='
+APPEND_LIST='
 com.android.vending
 com.google.android.gsf
 com.google.android.gms
 '
-USR='
+REMOVE_LIST='
 me.bmax.apatch
 com.android.patch
 me.garfieldhan.apatch.next
@@ -178,16 +181,16 @@ for NE in ${NES}
 do
     chmod +x "${NE}"
 done
-if [ ! -f "${FSEECONFIG}/usr.txt" ] || [ ! -f "${FSEECONFIG}/sys.txt" ]
+if [ ! -f "${REMOVE_FILE}" ] || [ ! -f "${APPEND_FILE}" ]
 then
     mkdir -p "${FSEECONFIG}"
-    print_cn '- 创建排除列表'
-    print_en '- Create default exclusion list'
-    [ -f "${FSEECONFIG}/sys.txt" ] || echo "${SYS}" | grep -v '^$' > "${FSEECONFIG}/sys.txt"
-    [ -f "${FSEECONFIG}/usr.txt" ] || echo "${USR}" | grep -v '^$' > "${FSEECONFIG}/usr.txt"
+    print_cn '- 创建默认配置'
+    print_en '- Create default config'
+    [ -f "${APPEND_FILE}" ] || echo "${APPEND_LIST}" | grep -v '^$' > "${APPEND_FILE}"
+    [ -f "${REMOVE_FILE}" ] || echo "${REMOVE_LIST}" | grep -v '^$' > "${REMOVE_FILE}"
 fi
 [ `grep_get_prop ro.product.brand` = 'OnePlus' ] && {
-    grep -qx 'com.oplus.engineermode' "${FSEECONFIG}/sys.txt" || echo 'com.oplus.engineermode' >> "${FSEECONFIG}/sys.txt"
-    grep -qx 'com.coloros.sceneservice' "${FSEECONFIG}/sys.txt" || echo 'com.coloros.sceneservice' >> "${FSEECONFIG}/sys.txt"
+    grep -qx 'com.oplus.engineermode' "${APPEND_FILE}" || echo 'com.oplus.engineermode' >> "${APPEND_FILE}"
+    grep -qx 'com.coloros.sceneservice' "${APPEND_FILE}" || echo 'com.coloros.sceneservice' >> "${APPEND_FILE}"
 }
 ##END##

@@ -8,15 +8,20 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 > This module **specializes** in disguising the bootloader status, **rather than** passed Play Integrity.
 
 ## Requirements
-- Installed the [ForgeStore](https://github.com/raana-labs/ForgeStore), or [TrickyStore](https://github.com/5ec1cff/TrickyStore), or [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS) or its branch [TEESimulator(<= 3.2)](https://github.com/JingMatrix/TEESimulator) or its branch [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS) module
-- The mounted system is not OverlayFS
+- Has been installed one of them
+  - [ForgeStore](https://github.com/raana-inf/ForgeStore)
+  - [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS)
+  - [TrickyStore](https://github.com/5ec1cff/TrickyStore)
+  - [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS)
+  - [TEESimulator(<= 3.2)](https://github.com/JingMatrix/TEESimulator)
+- Mount system not OverlayFS
 
 ## Install
 1. Flash this module and reboot.
 2. Manual configuration (optional).
 3. Enjoy!
 
-## Feature
+## Features
 ### Main
 - `libc::inotify*` real-time monitoring
   - Add a remove tag / Force delete to conflict module; Directly uninstall the conflict app when detected
@@ -29,10 +34,10 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 ### Other
 - Avoid abnormal environments
 - Display detailed dashboard in module description, Example:  
-`[MainModule: ✅TrickyStoreOSS(155), Root: ✅APatch(11224), Integrity: ✅Verified, Daemon: ✅Running]`  
-`[MainModule: ❌Multiple-ForgeStore(143)|TrickyStore(248), Root: ❌Multiple-APatch(11224)|KernelSU(32525), Integrity: ⚠️This build is unsigned, Service: ❌All service will not start]`
+  `[MainModule: ✅ForgeStore (170), RootImplement: ✅APatch (11224), Integrity: ✅Verified, Service: ✅Running]`  
+  `[MainModule: ❌Multiple - ForgeStore (170) | OhMyKeymint (157) | TEESimulator (34) | TrickyStoreOSS (155), RootImplement: ❌Multiple - APatch (11224) | KernelSU(32525), Integrity: ⚠️This build is unsigned, Service: ❌All service will not start]`
 - Display zh-Hans or en-US based on the system language: User-visible part
-  - Force en-US: Create `/data/adb/fs_enhancer_extreme/config/english` empty file
+  - Force en-US: Create `/data/adb/fs_enhancer_extreme/config/setting/force_english` empty file
 
 ### WebUI
 - Provides Google Hardware Attestation Root Certificate signing keybox
@@ -50,27 +55,23 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
   - Check and directly uninstall conflict apps
     - `appcheck`
   - Check and add remove tag or force delete conflict modules
-    - `modcheck/-d|--daemon`
+    - `modcheck/-b|--boot`
   - Through Bootloader unlock related prop detection
     - `passprop`
   - Automatically correct abnormal VerifiedBootHash prop
-    - `passvbhash`
+    - `passvbhash/-b|--boot`
   - Launch standalone WebUI app to id fs_enhancer_extreme
     - `startwebui`
   - Sync Security Patch Level from security_patch.txt to prop
-    - `spsyncprop`
+    - `spsyncprop/-b|--boot`
   - Detect and cache all necessity runtime environments
     - `envcollect`
   - Refresh module decription line from envcollect cache
     - `descrefresh/-d|--debug`
-  - Refresh Forge Store target.txt from user config
+  - Refresh main module scope list from user config
     - `listrefresh`
   - Keybox Manager
     - `keybox` `builtin|import<<<path`
-
-### Configuration
-  - Config directory path: `/data/adb/fs_enhancer_extreme/config`
-  - Log directory path: `/data/adb/fs_enhancer_extreme/log|log.old`. If encounter problems, please create an issue and attach the logs.
 
 > [!NOTE]
 > ### WebUI Launch
@@ -90,6 +91,13 @@ Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootlo
 
 ### Packaging
 - Execute in the terminal `./gradlew zip`
+
+## Translation
+// Go to `fseew/src/json/` add `language.json` file and then create [Pull requests](https://github.com/XtrLumen/FS-Enhancer-Extreme/pulls) to contribute the WebUI translation.
+
+## Feedback
+Log directory path: `/data/adb/fs_enhancer_extreme/log|log.old`  
+  Create [Issues](https://github.com/XtrLumen/FS-Enhancer-Extreme/issues) and attach log.
 
 ## Acknowledgement
 - [Fluent2](https://storybooks.fluentui.dev/web-components)

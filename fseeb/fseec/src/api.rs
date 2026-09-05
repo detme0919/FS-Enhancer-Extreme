@@ -13,74 +13,90 @@
  * Copyright (C) 2026 XtrLumen
  */
 
-use crate::util_functions::{
-    getprop,
-    pm_list,
-    read_to_string
+use crate::{
+    define::{
+        FSEEMODDIR,
+        Environment,
+        MAIN_MODULE,
+        ROOT_IMPLEMENT,
+        VERIFY
+    },
+    util_functions::{
+        getprop,
+        pm_list,
+        read_to_string
+    }
 };
 
-use std::{
-    ffi::CStr,
-    os::raw::c_char
+use std::ffi::{
+    CStr,
+    c_char
 };
 
-use anyhow::{
-    bail,
-    ensure
-};
+use anyhow::ensure;
 
-fn print_pm_list_json(arg: &str) -> anyhow::Result<()> {
-    let result: String = pm_list(arg)?;
+pub fn version_name() -> anyhow::Result<()> {
+    let content: String = read_to_string(format!("{}/module.prop", FSEEMODDIR))?;
 
-    let packages: Vec<&str> = result.lines().filter_map(|line|
-        line.strip_prefix("package:")
-    ).collect();
+    let version_name: &str = content.lines().find_map(|line|
+        line.strip_prefix("version=v")
+    ).unwrap();
 
-    print!("{:?}", packages);
+    print!("{}", version_name);
 
     Ok(())
 }
 
-pub fn system_package() -> anyhow::Result<()> {
-    print_pm_list_json("-s")
+fn print_identity(env: &Environment) {
+    if env.multiple {
+        print!("{}", env.identity)
+    } else {
+        print!("{}[{}]", env.identity, env.version)
+    }
 }
 
-pub fn user_package() -> anyhow::Result<()> {
-    print_pm_list_json("-3")
+pub fn main_module() {
+    print_identity(&MAIN_MODULE)
 }
 
-// todo!();
+pub fn root_implement() {
+    print_identity(&ROOT_IMPLEMENT)
+}
 
-pub fn getenforce() -> anyhow::Result<()> {
-    let status: &str = match read_to_string("/sys/fs/selinux/enforce")?.trim() {
-        "0" => "Permissive",
-        "1" => "Enforcing",
-        other => bail!("SELinux 未知状态: {}", other)
+pub fn integrity_status() {
+    let status = match *VERIFY {
+        Some(true) => 2,
+        None => 1,
+        Some(false) => 0
     };
 
-    print!("{}", status);
+    print!("{}", status)
+}
+
+pub fn getenforce() -> anyhow::Result<()> {
+    let status: String = read_to_string("/sys/fs/selinux/enforce")?;
+
+    print!("{}", status.trim());
 
     Ok(())
 }
 
-fn print_prop(arg: &str) -> anyhow::Result<()> {
+fn print_prop(arg: &str) {
     let result: String = getprop(arg);
 
-    print!("{}", result);
-
-    Ok(())
+    print!("{}", result)
 }
 
 pub fn android_version() -> anyhow::Result<()> {
     let release: String = getprop("ro.build.version.release");
     let sdk: String = getprop("ro.build.version.sdk");
 
-    print!("{} (API {})", release, sdk);
+    print!("{}[API {}]", release, sdk);
 
     Ok(())
 }
 
-pub fn device_arch() -> anyhow::Result<()> {
+pub fn device_arch() {
     print_prop("ro.product.cpu.abi")
 }
 
@@ -119,6 +135,26 @@ pub fn kernel_version() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn fingerprint() -> anyhow::Result<()> {
+pub fn fingerprint() {
     print_prop("ro.build.fingerprint")
+}
+
+fn print_pm_list_json(arg: &str) -> anyhow::Result<()> {
+    let result: String = pm_list(arg)?;
+
+    let packages: Vec<&str> = result.lines().filter_map(|line|
+        line.strip_prefix("package:")
+    ).collect();
+
+    print!("{:?}", packages);
+
+    Ok(())
+}
+
+pub fn system_package() -> anyhow::Result<()> {
+    print_pm_list_json("-s")
+}
+
+pub fn user_package() -> anyhow::Result<()> {
+    print_pm_list_json("-3")
 }

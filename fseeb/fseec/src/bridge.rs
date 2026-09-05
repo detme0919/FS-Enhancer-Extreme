@@ -42,7 +42,7 @@ impl Pointers {
             ).expect("符号缺失")
         }
     }
-    fn export() -> Self {
+    fn import() -> Self {
         Self {
             verify:    Self::load_symbol("verify"),
             sigsegv:   Self::load_symbol("sigsegv"),
@@ -57,7 +57,7 @@ impl Pointers {
 }
 
 static FN: LazyLock<Pointers> = LazyLock::new(||
-    Pointers::export()
+    Pointers::import()
 );
 
 pub fn verify() -> Option<bool> {
@@ -73,24 +73,24 @@ pub mod log {
 
     use super::FN;
 
-    pub fn raw(msg: &str) {
-        (FN.log_raw)(msg)
+    pub fn raw(msg: impl AsRef<str>) {
+        (FN.log_raw)(msg.as_ref())
     }
 
-    pub fn info(msg: &str) {
-        (FN.log_info)(LOG_TAG, msg)
+    pub fn info(msg: impl AsRef<str>) {
+        (FN.log_info)(LOG_TAG, msg.as_ref())
     }
 
-    pub fn warn(msg: &str) {
-        (FN.log_warn)(LOG_TAG, msg)
+    pub fn warn(msg: impl AsRef<str>) {
+        (FN.log_warn)(LOG_TAG, msg.as_ref())
     }
 
-    pub fn error(msg: &str) {
-        (FN.log_error)(LOG_TAG, msg)
+    pub fn error(msg: impl AsRef<str>) {
+        (FN.log_error)(LOG_TAG, msg.as_ref())
     }
 
     #[cfg(debug_assertions)]
-    pub fn debug(msg: &str) {
-        (FN.log_debug)(LOG_TAG, msg)
+    pub fn debug(msg: impl AsRef<str>) {
+        (FN.log_debug)(LOG_TAG, msg.as_ref())
     }
 }

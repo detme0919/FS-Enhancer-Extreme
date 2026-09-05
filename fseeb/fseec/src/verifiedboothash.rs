@@ -15,10 +15,11 @@
 
 use crate::{
     define::{
+        TRICKY_STORE,
         FSEEMODDIR,
-        FSEECONFIG,
-        MAIN_MODULE_ENV_FILE,
-        MAIN_MODULE_IDENTITY
+        VBH_FILE,
+        SKIP_VBHPASS,
+        MAIN_MODULE
     },
     util_functions::{
         resetprop,
@@ -27,9 +28,11 @@ use crate::{
         pm_uninstall,
         write,
         read_to_string,
-        read_version_integer,
-        delete_file
+        create_file,
+        delete_file,
+        setting_get_positive
     },
+    cli::Mode,
     bridge::log
 };
 
@@ -46,11 +49,14 @@ fn set_vbhash(value: &str) -> anyhow::Result<()> {
     resetprop(&["-n", "ro.boot.vbmeta.digest", value])
 }
 
-pub fn entry() -> anyhow::Result<()> {
-    let persist_hash_full_path: String = format!("{}/verifiedboothash", FSEECONFIG);
+pub fn pass(mode: Mode) -> anyhow::Result<()> {
+    if mode.boot && Path::new(SKIP_VBHPASS).exists() {
+        log::info("跳过: 修正已验证启动哈希");
+        process::exit(1)
+    }
 
     let write_persist_hash = |data: String| {
-        write(&persist_hash_full_path, data, true)
+        write(VBH_FILE, data, true)
     };
 
     let now_vbhash: String = get_vbhash();
@@ -64,7 +70,7 @@ pub fn entry() -> anyhow::Result<()> {
                 .output();
             let new_vbhash: Option<String> = match content_result {
                 Ok(output) => {
-                    let content_stdout = String::from_utf8(output.stdout).unwrap().trim().to_string();
+                    let content_stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
                     log::info(&content_stdout);
                     let marker: &str = "=verifiedBootHash";
                     if content_stdout.contains(marker) {
@@ -75,7 +81,7 @@ pub fn entry() -> anyhow::Result<()> {
                     }
                 }
                 Err(error) => {
-                    log::error(&format!("content执行失败: {}", error));
+                    log::error(format!("content执行失败: {}", error));
                     None
                 }
             };
@@ -108,17 +114,17 @@ pub fn entry() -> anyhow::Result<()> {
                 log::error("抓取日志");
                 match process::Command::new("logcat").args(&["-d", "-s", "[FSEE]"]).output() {
                     Ok(result) => {
-                        let stdout = String::from_utf8(result.stdout).unwrap();
+                        let stdout = String::from_utf8_lossy(&result.stdout);
                         let filtered: String = stdout.lines().filter(|line|
                             !line.contains("beginning of")
                         ).intersperse("\n").collect();
                         if !filtered.is_empty() {
-                            log::raw(&filtered);
+                            log::raw(filtered);
                         } else {
                             log::error("抓取失败");
                         }
                     }
-                    Err(error) => log::error(&format!("执行失败: {}", error))
+                    Err(error) => log::error(format!("执行失败: {}", error))
                 }
 
                 false
@@ -137,7 +143,7 @@ pub fn entry() -> anyhow::Result<()> {
             log::warn("获取失败, 生成随机哈希值作为VerifiedBootHash并缓存数据");
             let mut buffer = [0u8; 32];
             if let Err(error) = getrandom::fill(&mut buffer) {
-                log::error(&format!("getrandom调用失败: {}", error));
+                log::error(format!("getrandom调用失败: {}", error));
                 return;
             } else {
                 let hash = buffer.iter().map(|byte|
@@ -145,7 +151,7 @@ pub fn entry() -> anyhow::Result<()> {
                 ).collect::<String>();
 
                 if set_vbhash(&hash).is_ok() {
-                    log::info(&format!("重置完毕, 当前VerifiedBootHash: {}", get_vbhash()))
+                    log::info(format!("重置完毕, 当前VerifiedBootHash: {}", get_vbhash()))
                 } else {
                     log::error("重置失败")
                 }
@@ -155,15 +161,15 @@ pub fn entry() -> anyhow::Result<()> {
         }
     };
 
-    if *MAIN_MODULE_IDENTITY == "TrickyStore" && read_version_integer(MAIN_MODULE_ENV_FILE) >= 245 {
-        let persist_hash_file = Path::new(&persist_hash_full_path);
+    if MAIN_MODULE.identity == TRICKY_STORE && MAIN_MODULE.version >= 245 {
+        let persist_hash_file = Path::new(VBH_FILE);
         if persist_hash_file.exists() {
             if let Ok(success) = read_to_string(persist_hash_file) {
                 if now_vbhash == success {
                     log::info("无需修正");
                 } else {
                     if set_vbhash(&success).is_ok() {
-                        log::info(&format!("修正完毕, 当前VerifiedBootHash: {}", get_vbhash()))
+                        log::info(format!("修正完毕, 当前VerifiedBootHash: {}", get_vbhash()))
                     } else {
                         log::error("修正失败")
                     }
@@ -177,9 +183,21 @@ pub fn entry() -> anyhow::Result<()> {
             err_apply_random_vbhash();
         }
     } else {
-        delete_file(&persist_hash_full_path);
+        delete_file(VBH_FILE);
         contentapp(false);
     }
 
     Ok(())
+}
+
+pub fn vbhpass_on() {
+    delete_file(SKIP_VBHPASS)
+}
+
+pub fn vbhpass_off() {
+    create_file(SKIP_VBHPASS)
+}
+
+pub fn vbhpass_get() -> ! {
+    setting_get_positive(SKIP_VBHPASS)
 }

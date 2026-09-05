@@ -56,11 +56,13 @@ logE() {
     output 'E' "${*}"
 }
 first_initial() {
+    mkdir -p "${FSEEDIR}/config/setting"
+
     rm -rf "${OLDLOG}"
     mv -f "${LOGDIR}" "${OLDLOG}"
     mkdir -p "${LOGDIR}"
     touch "${FSEELOG}"
-    logI '完成日志轮换'
+
     rm -f "${INTERCEPT}"
 }
 last_initial() {
@@ -106,9 +108,9 @@ invoke() {
     logI "fseec(\"${*}\")"
     if fseec ${@}
     then
-        logI "Ok(\"${*}\")"
+        logI "Ok(\"fseec ${*}\")"
     else
-        logW "Err(\"${*}\")"
+        logW "Err(\"fseec ${*}\")"
     fi
 }
 ##END##

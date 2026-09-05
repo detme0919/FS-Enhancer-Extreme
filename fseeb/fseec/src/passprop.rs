@@ -16,17 +16,22 @@
 #[cfg(debug_assertions)]
 use crate::bridge::log;
 
-use crate::{
-    define::BLKSSZGET,
-    util_functions::{
-        resetprop,
-        getprop
-    }
+use crate::util_functions::{
+    resetprop,
+    getprop
 };
 
-use std::{
-    ffi::CString,
-    os::raw::c_int
+use std::ffi::{
+    c_int,
+    CString
+};
+
+use libc::{
+    open,
+    ioctl,
+    close,
+    O_RDONLY,
+    BLKSSZGET
 };
 
 fn check_missing_match_prop(prop: &[&str]) -> anyhow::Result<()> {
@@ -88,29 +93,29 @@ pub fn entry() -> anyhow::Result<()> {
         let path = CString::new(format!("/dev/block/by-name/vbmeta{}", slot)).unwrap();
 
         let file_descriptor: c_int = unsafe {
-            libc::open(path.as_ptr(), libc::O_RDONLY)
+            open(path.as_ptr(), O_RDONLY)
         };
         if file_descriptor >= 0 {
             let mut size: c_int = 0;
 
             let return_type: c_int = unsafe {
-                libc::ioctl(file_descriptor, BLKSSZGET, &mut size)
+                ioctl(file_descriptor, BLKSSZGET, &mut size)
             };
             if return_type == 0 {
                 final_size = size.to_string()
             }
             #[cfg(debug_assertions)]
             if return_type != 0 {
-                log::debug(&format!("return_type: {}", return_type));
+                log::debug(format!("return_type: {}", return_type));
             }
 
             unsafe {
-                libc::close(file_descriptor);
+                close(file_descriptor);
             }
         }
         #[cfg(debug_assertions)]
         if file_descriptor < 0 {
-            log::debug(&format!("file_descriptor: {}", file_descriptor));
+            log::debug(format!("file_descriptor: {}", file_descriptor));
         }
 
         final_size

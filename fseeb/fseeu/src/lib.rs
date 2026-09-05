@@ -55,7 +55,8 @@ pub fn log_raw(msg: &str) {
 pub fn sigsegv() {
     log_error("lib", "遭到篡改");
     unsafe {
-        *(0xDEADBEEF as *mut u8) = u8::MIN
+        let ref ptr = 0x00001000 as *mut i128;
+        **ptr = i128::MIN
     }
     process::abort()
 }

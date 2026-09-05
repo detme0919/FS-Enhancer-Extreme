@@ -24,6 +24,15 @@ use std::{
     fs::OpenOptions
 };
 
+use libc::{
+    tm,
+    gettid,
+    timespec,
+    localtime_r,
+    clock_gettime,
+    CLOCK_REALTIME
+};
+
 fn write(msg: String) {
     OpenOptions::new().create(true).append(true).open(FSEELOG).and_then(|mut content|
         content.write_all(
@@ -34,13 +43,13 @@ fn write(msg: String) {
 
 pub fn output(level: char, tag: &str, msg: &str) {
     let (ts, tm, tid) = unsafe {
-        let mut ts: libc::timespec = mem::zeroed();
-        libc::clock_gettime(libc::CLOCK_REALTIME, &mut ts);
+        let mut ts: timespec = mem::zeroed();
+        clock_gettime(CLOCK_REALTIME, &mut ts);
 
-        let mut tm: libc::tm = mem::zeroed();
-        libc::localtime_r(&ts.tv_sec, &mut tm);
+        let mut tm: tm = mem::zeroed();
+        localtime_r(&ts.tv_sec, &mut tm);
 
-        (ts, tm, libc::gettid())
+        (ts, tm, gettid())
     };
     write(format!(
         "{:02}-{:02} {:02}:{:02}:{:02}.{:03}  {}  {} {} [FSEE]  : <{}> {}\n",

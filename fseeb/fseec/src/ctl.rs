@@ -15,133 +15,111 @@
 
 use crate::{
     define::{
-        ABNORMAL_ENV,
+        FORGE_STORE,
+        FSMODDIR,
         FSEEMODDIR,
-        MAIN_MODULE_IDENTITY,
-        ENV_NORMAL,
-        FINAL_NICE_NAME,
-        FINAL_MAIN_MODULE_DIR
+        MAIN_MODULE
     },
     util_functions::{
         pidof,
-        kill
+        sigkill
     }
 };
 
-use std::process;
+use std::{
+    process,
+    process::Stdio
+};
 
-pub fn fs_state() -> anyhow::Result<()> {
-    if *ENV_NORMAL {
-        if let Some(pid) = pidof(*FINAL_NICE_NAME) {
-            println!("running|{}", pid)
-        } else {
-            println!("not running")
-        }
-    } else {
-        println!("{}", ABNORMAL_ENV)
+fn other_intercept() {
+    if MAIN_MODULE.identity != FORGE_STORE {
+        println!("Not support main module other than ForgeStore");
+        process::exit(1)
     }
-
-    Ok(())
 }
 
-pub fn fs_stop() -> anyhow::Result<()> {
-    if *ENV_NORMAL {
-        if *MAIN_MODULE_IDENTITY != "TEESimulatorRS" {
-            if let Some(pid) = pidof(*FINAL_NICE_NAME) {
-                kill(pid)?;
-                println!("{}|stopped", pid)
-            } else {
-                println!("not running")
-            }
-        } else {
-            println!("Not support {}", *MAIN_MODULE_IDENTITY)
-        }
-    } else {
-        println!("{}", ABNORMAL_ENV)
-    }
+pub fn fs_state() {
+    other_intercept();
 
-    Ok(())
-}
-
-pub fn fs_start() -> anyhow::Result<()> {
-    if *ENV_NORMAL {
-        if *MAIN_MODULE_IDENTITY != "TEESimulatorRS" {
-            process::Command::new("sh").current_dir(*FINAL_MAIN_MODULE_DIR).arg("./service.sh")
-                .stdin(process::Stdio::null())
-                .stdout(process::Stdio::null())
-                .stderr(process::Stdio::null())
-                .spawn()?;
-            if let Some(pid) = pidof(*FINAL_NICE_NAME) {
-                println!("success|{}", pid)
-            } else {
-                println!("failure");
-                process::exit(1)
-            }
-        } else {
-            println!("Not support {}", *MAIN_MODULE_IDENTITY)
-        }
-    } else {
-        println!("{}", ABNORMAL_ENV)
-    }
-
-    Ok(())
-}
-
-pub fn fs_restart() -> anyhow::Result<()> {
-    if let Some(pid) = pidof(*FINAL_NICE_NAME) {
-        kill(pid)?;
-        fs_start()?
+    if let Some(pid) = pidof("forgestore") {
+        println!("running|{}", pid)
     } else {
         println!("not running")
     }
-
-    Ok(())
 }
 
-pub fn fsee_state() -> anyhow::Result<()> {
+pub fn fs_stop() {
+    other_intercept();
+
+    if let Some(pid) = pidof("forgestore") {
+        if sigkill(pid).is_ok() {
+            println!("stopped|{}", pid)
+        } else {
+            println!("failure");
+            process::exit(1)
+        }
+    } else {
+        println!("not running")
+    }
+}
+
+pub fn fs_start() {
+    other_intercept();
+
+    let Ok(daemon) = process::Command::new(format!("{}/daemon", FSMODDIR)).arg(FSMODDIR)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+    else {
+        println!("failure");
+        process::exit(1)
+    };
+
+    println!("success|{}", daemon.id())
+}
+
+pub fn fs_restart() {
+    fs_stop();
+    fs_start()
+}
+
+pub fn fsee_state() {
     if let Some(pid) = pidof("fsees") {
         println!("running|{}", pid)
     } else {
         println!("not running")
     }
-
-    Ok(())
 }
 
-pub fn fsee_stop() -> anyhow::Result<()> {
+pub fn fsee_stop() {
     if let Some(pid) = pidof("fsees") {
-        kill(pid)?;
-        println!("{}|stopped", pid)
+        if sigkill(pid).is_ok() {
+            println!("stopped|{}", pid)
+        } else {
+            println!("failure");
+            process::exit(1)
+        }
     } else {
         println!("not running")
     }
-
-    Ok(())
 }
 
-pub fn fsee_start() -> anyhow::Result<()> {
-    process::Command::new(format!("{}/bin/fsees", FSEEMODDIR))
-        .stdin(process::Stdio::null())
-        .stdout(process::Stdio::null())
-        .stderr(process::Stdio::null())
-        .spawn()?;
-    if let Some(pid) = pidof("fsees") {
-        println!("success|{}", pid)
-    } else {
+pub fn fsee_start() {
+    let Ok(daemon) = process::Command::new(format!("{}/bin/fsees", FSEEMODDIR))
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+    else {
         println!("failure");
         process::exit(1)
-    }
+    };
 
-    Ok(())
+    println!("success|{}", daemon.id())
 }
 
-pub fn fsee_restart() -> anyhow::Result<()> {
-    if let Some(pid) = pidof("fsees") {
-        kill(pid)?;
-        fsee_start()?
-    } else {
-        println!("not running")
-    }
-
-    Ok(())
+pub fn fsee_restart() {
+    fsee_stop();
+    fsee_start()
 }

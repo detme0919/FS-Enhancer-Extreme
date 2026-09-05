@@ -8,7 +8,12 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 > 本模块**专精**伪装引导加载程序状态，**而非**通过PlayIntegrity。
 
 ## 条件
-- 已安装 [ForgeStore](https://github.com/raana-labs/ForgeStore)，或 [TrickyStore](https://github.com/5ec1cff/TrickyStore)，或 [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS) 或它的分支 [TEESimulator(<= 3.2)](https://github.com/JingMatrix/TEESimulator) 或它的分支 [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS) 模块
+- 已安装其中之一
+  - [ForgeStore](https://github.com/raana-inf/ForgeStore)
+  - [TrickyStoreOSS](https://github.com/beakthoven/TrickyStoreOSS)
+  - [TrickyStore](https://github.com/5ec1cff/TrickyStore)
+  - [TEESimulator-RS](https://github.com/Enginex0/TEESimulator-RS)
+  - [TEESimulator(<= 3.2)](https://github.com/JingMatrix/TEESimulator)
 - 挂载系统不是 OverlayFS
 
 ## 安装
@@ -29,10 +34,10 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 ### 其他
 - 规避异常环境
 - 在模块描述显示详细仪表盘，例:  
-`[主模块: ✅TrickyStoreOSS(155), 根实现: ✅APatch(11224), 完整性: ✅通过验证, 服务: ✅运行中]`  
-`[主模块: ❌多重共存-ForgeStore(143)|TrickyStore(248), 根实现: ❌多重共存-APatch(11224)|KernelSU(32525), 完整性: ⚠️本次构建未签名, 服务: ❌所有服务将不会启动]`
+  `[主模块: ✅ForgeStore (170), 根实现: ✅APatch (11224), 完整性: ✅通过验证, 服务: ✅运行中]`  
+  `[主模块: ❌多重共存 - ForgeStore (170) | OhMyKeymint (157) | TEESimulator (34) | TrickyStoreOSS (155), 根实现: ❌多重共存 - APatch (11224) | KernelSU (32525), 完整性: ⚠️本次构建未签名, 服务: ❌所有服务将不会启动]`
 - 根据系统语言分别显示 zh-Hans 或 en-US : 用户可见部分
-  - 强制 en-US : 创建 `/data/adb/fs_enhancer_extreme/config/english` 空文件
+  - 强制 en-US : 创建 `/data/adb/fs_enhancer_extreme/config/setting/force_english` 空文件
 
 ### WebUI
 - 提供谷歌硬件认证根证书签名的 keybox
@@ -50,27 +55,23 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
   - Check and directly uninstall conflict apps
     - `appcheck`
   - Check and add remove tag or force delete conflict modules
-    - `modcheck/-d|--daemon`
+    - `modcheck/-b|--boot`
   - Through Bootloader unlock related prop detection
     - `passprop`
   - Automatically correct abnormal VerifiedBootHash prop
-    - `passvbhash`
+    - `passvbhash/-b|--boot`
   - Launch standalone WebUI app to id fs_enhancer_extreme
     - `startwebui`
   - Sync Security Patch Level from security_patch.txt to prop
-    - `spsyncprop`
+    - `spsyncprop/-b|--boot`
   - Detect and cache all necessity runtime environments
     - `envcollect`
   - Refresh module decription line from envcollect cache
     - `descrefresh/-d|--debug`
-  - Refresh Forge Store target.txt from user config
+  - Refresh main module scope list from user config
     - `listrefresh`
   - Keybox Manager
     - `keybox` `builtin|import<<<path`
-
-### 配置
-  - 配置目录路径: `/data/adb/fs_enhancer_extreme/config`
-  - 日志目录路径: `/data/adb/fs_enhancer_extreme/log|log.old`，如遇到问题，请创建 issue 并附上日志。
 
 > [!NOTE]
 > ### WebUI 启动
@@ -90,6 +91,13 @@ ForgeStore增强, 极致隐藏由解锁引导加载程序产生的检测点.
 
 ### 打包
 - 于终端执行 `./gradlew zip`
+
+## 翻译
+// 前往 `fseew/src/json/` 添加 `language.json` 文件后创建 [Pull requests](https://github.com/XtrLumen/FS-Enhancer-Extreme/pulls) 来为 WebUI 的翻译做出贡献。
+
+## 反馈
+日志目录路径: `/data/adb/fs_enhancer_extreme/log|log.old`  
+  创建 [Issues](https://github.com/XtrLumen/FS-Enhancer-Extreme/issues) 并附上日志。
 
 ## 致谢
 - [Fluent2](https://storybooks.fluentui.dev/web-components)

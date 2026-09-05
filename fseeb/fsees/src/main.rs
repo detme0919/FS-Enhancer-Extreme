@@ -13,86 +13,108 @@
  * Copyright (C) 2026 XtrLumen
  */
 
+#![allow(unused_must_use)]
+
 mod bridge;
 mod define;
 
-use bridge::log;
+use {
+    define::{
+        FSEEC,
+        SKIP_APPCHECK,
+        SKIP_MODCHECK
+    },
+    bridge::log
+};
 
 use std::{
     fs,
     thread,
-    process,
-    sync::mpsc,
     path::Path,
-    ffi::CString,
     process::Command,
-    time::{
-        Instant,
-        Duration
+    thread::JoinHandle,
+    os::unix::process::ExitStatusExt,
+    ffi::{
+        c_void,
+        CString
     }
 };
 
-fn watch(path: &str, args: &[&[&str]], events: u32, tx: mpsc::Sender<bool>) {
+use libc::{
+    read,
+    close,
+    inotify_init,
+    inotify_add_watch,
+    IN_ISDIR,
+    IN_CREATE,
+    IN_DELETE,
+};
+
+fn monitor(args: &[&str], path: &str, events: u32) {
+    macro_rules! proxy {
+        ($log_level:path, $msg:expr) => {
+            $log_level(format!("{}: {} << {:032b}", $msg, path, events))
+        }
+    }
+
     if !Path::new(path).exists() {
-        log::warn(&format!("目录{}不存在, 尝试创建", path));
+        log::warn(format!("目录 {} 不存在, 尝试创建", path));
         if let Err(error) = fs::create_dir_all(path) {
-            log::error(&format!("目录{}创建失败: {}, 结束线程", path, error));
-            tx.send(false).ok();
-            return;
+            log::error(format!("目录 {} 创建失败: {}, 结束线程", path, error));
+            return
         }
     }
 
     let instance = unsafe {
-        libc::inotify_init()
+        inotify_init()
     };
     if instance < 0 {
-        log::error("实例创建失败");
-        tx.send(false).ok();
-        return;
+        proxy!(log::error, "实例创建失败");
+        return
     }
+
     let watch = unsafe {
         let target = CString::new(path).unwrap();
-        libc::inotify_add_watch(instance, target.as_ptr(), events)
+        inotify_add_watch(instance, target.as_ptr(), events)
     };
     if watch < 0 {
-        log::error("监听添加失败");
-        tx.send(false).ok();
+        proxy!(log::error, "监听添加失败");
         unsafe {
-            libc::close(instance);
+            close(instance);
         }
-        return;
+        return
     }
 
-    log::info("线程就绪");
-    tx.send(true).ok();
+    proxy!(log::info, "监听就绪");
 
     let mut buffer = [0u8; 1024];
-    //日志限速
-    let mut last = Instant::now();
-    let speed = Duration::from_millis(1000);
     //循环启动
     loop {
         //阻塞
         unsafe {
-            libc::read(
+            read(
                 instance,
-                buffer.as_mut_ptr() as *mut libc::c_void,
+                buffer.as_mut_ptr() as *mut c_void,
                 buffer.len()
             )
         };
 
-        //日志限速
-        if last.elapsed() >= speed {
-            let all_args: Vec<String> = args.iter().map(|content|
-                content.join(" ")
-            ).collect();
-            log::info(&format!("执行 fseec {}", all_args.join(" & ")));
-            last = Instant::now();
-        }
+        let all_args = args.join(" + ");
+        log::info(format!("执行 fseec {}", all_args));
 
         for arg in args {
-            Command::new("/data/adb/modules/fs_enhancer_extreme/bin/fseec").args(*arg)
-                .status().ok();
+            match Command::new(FSEEC).arg(*arg)
+                .output()
+            {
+                Ok(output) => if !output.status.success() && output.status.signal() != Some(11) {
+                    log::warn(format!(
+                        "{} | {}",
+                        output.status,
+                        String::from_utf8_lossy(&output.stderr)
+                    ))
+                }
+                Err(error) => log::error(format!("启动失败: {}", error))
+            }
         }
     }
 }
@@ -101,38 +123,39 @@ fn main() {
     if bridge::verify() == Some(false) {
         bridge::sigsegv()
     }
-    log::info("开始启动线程");
+    log::info("启动线程");
 
-    let (tx1, rx1) = mpsc::channel();
-    let (tx2, rx2) = mpsc::channel();
-    thread::spawn(move || watch(
-        "/data/adb/modules_update",
-        &[
-            &["modcheck", "--daemon"]
-        ],
-        libc::IN_CREATE | libc::IN_ISDIR,
-        tx1
-    ));
-    thread::spawn(move || watch(
-        "/data/app",
-        &[
-            &["listupdate"],
-            &["appcheck"]
-        ],
-        libc::IN_CREATE | libc::IN_DELETE,
-        tx2
-    ));
-    let res1 = rx1.recv().unwrap();
-    let res2 = rx2.recv().unwrap();
-    if res1 && res2 {
-        log::info("成功启动服务");
-    } else if res1 || res2 {
-        log::warn("线程部分就绪");
+    let mut app_args: Vec<&str> = vec!["listrefresh"];
+    if Path::new(SKIP_APPCHECK).exists() {
+        log::info("跳过推入 appcheck 参数")
     } else {
-        log::error("服务启动失败");
-        process::abort();
+        app_args.push("appcheck")
     }
+    let app_handle: JoinHandle<()> = thread::spawn(move||
+        monitor(
+            &app_args,
+            "/data/app",
+            IN_CREATE | IN_DELETE
+        )
+    );
 
-    //挂起
-    thread::park();
+    let mod_handle: Option<JoinHandle<()>> = if Path::new(SKIP_MODCHECK).exists() {
+        log::info("跳过启动 modcheck 线程");
+        None
+    } else {
+        Some(
+            thread::spawn(||
+                monitor(
+                    &["modcheck"],
+                    "/data/adb/modules_update",
+                    IN_CREATE | IN_ISDIR
+                )
+            )
+        )
+    };
+
+    app_handle.join();
+    if let Some(handle) = mod_handle {
+        handle.join();
+    }
 }

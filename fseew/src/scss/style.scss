@@ -144,7 +144,7 @@ body {
                     // 圆角
                     border-radius: 4px;
                     // 阴影
-                    box-shadow: 0px 1.5px 2.5px rgba(0, 0, 0, 15%);
+                    box-shadow: 0 1.5px 2.5px rgba(0, 0, 0, 15%);
                 }
 
                 &#home_page > main {
@@ -421,6 +421,8 @@ body {
 
                         // 图标
                         > :nth-child(1) {
+                            // 禁止收缩
+                            flex-shrink: 0;
                             // 左外边距
                             margin-left: $short-line-height * 0.25;
                             // 高度

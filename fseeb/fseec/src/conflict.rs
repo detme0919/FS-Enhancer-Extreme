@@ -15,38 +15,34 @@
 
 use crate::{
     define::{
-        CONFLICT_DESC_LINE,
-        MODULESDIR,
-        MODULESUPDATEDIR,
         CONFLICT_APP,
         TAG_CONFLICT_MOD,
-        DEL_CONFLICT_MOD
+        DEL_CONFLICT_MOD,
+        MODULESDIR,
+        MODULESUPDATEDIR,
+        SKIP_APPCHECK,
+        SKIP_MODCHECK,
+        DESC_CONFLICT_MOD
     },
     util_functions::{
         pm_uninstall,
         pm_path,
         override_description,
-        delete_file
+        create_file,
+        delete_file,
+        setting_get_positive
     },
+    cli::Mode,
     bridge::log
 };
 
 use std::{
     fs,
-    time,
-    thread,
     process,
-    path::Path
+    path::Path,
+    thread::sleep,
+    time::Duration
 };
-
-use clap::Args;
-
-#[derive(Args)]
-pub struct Mode {
-    /// Patterns for daemon
-    #[arg(short, long)]
-    daemon: bool
-}
 
 pub fn app_process() -> anyhow::Result<()> {
     for conflict_app in CONFLICT_APP {
@@ -58,12 +54,6 @@ pub fn app_process() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn create_file(path: impl AsRef<Path>) {
-    if let Err(error) = fs::File::create(path) {
-        log::error(&format!("创建失败: {}", error))
-    }
-}
-
 fn delete_path(path: impl AsRef<Path>) {
     fs::remove_dir_all(path).ok();
 }
@@ -72,7 +62,7 @@ fn del_conflict_mod_process() {
     for del_conflict_mod in DEL_CONFLICT_MOD {
         let conflict_mod_full_path: String = format!("{}/{}", MODULESDIR, del_conflict_mod);
         if Path::new(&conflict_mod_full_path).exists() {
-            log::info(&format!("移除: {}", del_conflict_mod));
+            log::info(format!("移除: {}", del_conflict_mod));
             drop(process::Command::new("sh").current_dir(&conflict_mod_full_path).arg("./uninstall.sh")
                 .stdin(process::Stdio::null())
                 .stdout(process::Stdio::null())
@@ -83,40 +73,63 @@ fn del_conflict_mod_process() {
     }
 }
 
-fn tag_conflict_mod_process(is_daemon: bool) {
+fn tag_conflict_mod_process(boot_mode: bool) {
     for tag_conflict_mod in TAG_CONFLICT_MOD {
         let conflict_mod_full_path: String = format!("{}/{}", MODULESDIR, tag_conflict_mod);
         if Path::new(&conflict_mod_full_path).exists() {
-            log::info(&format!("处理: {}", tag_conflict_mod));
-            override_description(&conflict_mod_full_path, *CONFLICT_DESC_LINE);
+            log::info(format!("处理: {}", tag_conflict_mod));
+            override_description(&conflict_mod_full_path, *DESC_CONFLICT_MOD);
             create_file(format!("{}/disable", conflict_mod_full_path));
             create_file(format!("{}/remove", conflict_mod_full_path));
-            if is_daemon {
-                delete_path(format!("{}/{}", MODULESUPDATEDIR, tag_conflict_mod));
-            } else {
+            if boot_mode {
                 create_file(format!("{}/update", conflict_mod_full_path));
                 delete_file(format!("{}/uninstall.sh", conflict_mod_full_path));
                 delete_file(format!("{}/{}/uninstall.sh", MODULESUPDATEDIR, tag_conflict_mod));
+            } else {
+                delete_path(format!("{}/{}", MODULESUPDATEDIR, tag_conflict_mod));
             }
         }
     }
 }
 
-fn daemon_process() {
-    thread::sleep(time::Duration::from_secs(2));
+fn boot_process() {
     tag_conflict_mod_process(true);
-    del_conflict_mod_process();
 }
 
-fn boot_process() {
+fn daemon_process() {
+    sleep(Duration::from_secs(2));
     tag_conflict_mod_process(false);
-    del_conflict_mod_process();
 }
 
 pub fn route(mode: Mode) {
-    if mode.daemon {
-        daemon_process();
-    } else {
+    if mode.boot {
         boot_process();
+    } else {
+        daemon_process();
     }
+    del_conflict_mod_process()
+}
+
+pub fn appcheck_on() {
+    delete_file(SKIP_APPCHECK)
+}
+
+pub fn appcheck_off() {
+    create_file(SKIP_APPCHECK)
+}
+
+pub fn appcheck_get() -> ! {
+    setting_get_positive(SKIP_APPCHECK)
+}
+
+pub fn modcheck_on() {
+    delete_file(SKIP_MODCHECK)
+}
+
+pub fn modcheck_off() {
+    create_file(SKIP_MODCHECK)
+}
+
+pub fn modcheck_get() -> ! {
+    setting_get_positive(SKIP_MODCHECK)
 }

@@ -26,9 +26,9 @@ mod define;
 mod description;
 mod keybox;
 mod passprop;
-mod passvbhash;
+mod scope;
 mod securitypatch;
-mod targetlist;
+mod verifiedboothash;
 mod util_functions;
 mod webui;
 

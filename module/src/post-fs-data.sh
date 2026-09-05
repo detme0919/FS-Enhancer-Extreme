@@ -22,4 +22,4 @@ last_initial
 
 intercept
 
-invoke modcheck
+invoke modcheck --boot

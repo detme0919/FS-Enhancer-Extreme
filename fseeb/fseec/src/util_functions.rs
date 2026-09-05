@@ -14,60 +14,39 @@
  */
 
 use crate::{
-    define::{
-        IS_ZHCN,
-        DESC_PREFIX
-    },
+    define::IS_ZHCN,
     bridge::log
 };
 
 use std::{
     fs,
     str,
-    env,
     process,
     path::Path,
     fmt::Display,
-    os::{
-        fd::AsRawFd,
-        raw::c_char
-    },
     io::{
         Error,
         Result
     },
     ffi::{
         CStr,
+        c_char,
         CString
     }
 };
 
-use anyhow::{
-    anyhow,
-    ensure
+use anyhow::anyhow;
+use libc::{
+    kill,
+    SIGKILL
 };
-
-pub fn switch_mnt_namespace() -> anyhow::Result<()> {
-    let init_proc_mnt = "/proc/1/ns/mnt";
-    let file_descriptor = fs::File::open(init_proc_mnt)?;
-    let current_dir = env::current_dir();
-    let return_type = unsafe {
-        libc::setns(file_descriptor.as_raw_fd(), libc::CLONE_NEWNS)
-    };
-    if let Ok(current_dir) = current_dir {
-        env::set_current_dir(current_dir)?;
-    }
-    ensure!(return_type == 0, "switch mnt namespace failed");
-
-    Ok(())
-}
 
 pub fn pidof(name: &str) -> Option<i32> {
     let proc = match fs::read_dir("/proc") {
         Ok(dir) => dir.flatten(),
         Err(error) => {
-            log::error(&format!("/proc读取失败: {}", error));
-            panic!("/proc读取失败: {}", error);
+            log::error(format!("/proc读取失败: {}", error));
+            panic!("/proc读取失败: {}", error)
         }
     };
     for process in proc {
@@ -87,7 +66,7 @@ pub fn pidof(name: &str) -> Option<i32> {
         };
 
         let Some(bytes) = cmdline.split(|&byte| byte == 0).next() else {
-            continue;
+            continue
         };
         let arg_one = if let Ok(normal) = str::from_utf8(bytes) {
             normal
@@ -97,16 +76,16 @@ pub fn pidof(name: &str) -> Option<i32> {
         let basename = arg_one.rsplit('/').next().unwrap();
 
         if basename == name {
-            return Some(pid);
+            return Some(pid)
         }
     }
 
     None
 }
 
-pub fn kill(pid: i32) -> anyhow::Result<()> {
+pub fn sigkill(pid: i32) -> anyhow::Result<()> {
     if unsafe {
-        libc::kill(pid, libc::SIGKILL)
+        kill(pid, SIGKILL)
     } == 0 {
         Ok(())
     } else {
@@ -128,7 +107,7 @@ fn result_process(result: &process::Output, is_stderr: bool) -> (i32, String) {
 
 fn intercept_log_err(result: &process::Output, is_stderr: bool) {
     let (code, output) = result_process(result, is_stderr);
-    log::error(&format!("{}|{}", code, output));
+    log::error(format!("{}|{}", code, output));
 }
 
 fn pass_through_err(result: &process::Output, is_stderr: bool) -> anyhow::Error {
@@ -147,7 +126,7 @@ fn intercept_log_and_pass_through_err(result: Result<process::Output>, command: 
             }
         }
         Err(error) => {
-            log::error(&format!("{} 执行失败: {}", command, error));
+            log::error(format!("{} 执行失败: {}", command, error));
             Err(error.into())
         }
     }
@@ -202,7 +181,7 @@ pub fn pm_install(arg: String) -> bool {
             }
         }
         Err(error) => {
-            log::error(&format!("安装失败: {}", error));
+            log::error(format!("安装失败: {}", error));
             false
         }
     }
@@ -216,7 +195,7 @@ pub fn pm_uninstall(arg: &str) {
                 intercept_log_err(&result, false);
             }
         }
-        Err(error) => log::error(&format!("卸载失败: {}", error))
+        Err(error) => log::error(format!("卸载失败: {}", error))
     }
 }
 
@@ -244,7 +223,7 @@ pub fn pm_path(arg: &str, crash: bool) -> anyhow::Result<bool> {
         Err(error) => if crash {
             Err(error.into())
         } else {
-            log::error(&format!("pm path执行失败: {}", error));
+            log::error(format!("pm path执行失败: {}", error));
             Ok(false)
         }
     }
@@ -252,14 +231,14 @@ pub fn pm_path(arg: &str, crash: bool) -> anyhow::Result<bool> {
 
 pub fn read_to_string(path: impl AsRef<Path>) -> anyhow::Result<String> {
     fs::read_to_string(&path).map_err(|error|{
-        log::error(&format!("{} 读取失败: {}", path.as_ref().display(), error));
+        log::error(format!("{} 读取失败: {}", path.as_ref().display(), error));
         error.into()
     })
 }
 
 pub fn write(path: impl AsRef<Path>, data: impl AsRef<[u8]>, log: bool) {
     if let Err(error) = fs::write(&path, data) {
-        log::error(&format!("{} 写入失败: {}", path.as_ref().display(), error));
+        log::error(format!("{} 写入失败: {}", path.as_ref().display(), error));
     } else {
         if log {
             log::info("写入成功")
@@ -267,50 +246,45 @@ pub fn write(path: impl AsRef<Path>, data: impl AsRef<[u8]>, log: bool) {
     }
 }
 
-pub fn read_multiple_bool(env_file: &str) -> bool {
-    read_to_string(Path::new(env_file)).ok().is_some_and(|content|
-        content.lines().nth(0).is_some_and(|line|
-            line.trim().parse().unwrap_or(false)
-        )
-    )
-}
-pub fn read_identity_string(env_file: &str) -> String {
-    read_to_string(Path::new(env_file)).ok().and_then(|content|
-        content.lines().nth(1).map(|line|
-            line.trim().to_string()
-        )
-    ).unwrap_or_default()
-}
-pub fn read_version_integer(env_file: &str) -> u32 {
-    read_to_string(Path::new(env_file)).ok().and_then(|content|
-        content.lines().nth(2).map(|line|
-            line.trim().parse().unwrap_or(u32::MAX)
-        )
-    ).unwrap_or(u32::MAX / 2)
+pub fn override_description(path: &str, description: impl AsRef<str>) {
+    let file = format!("{}/module.prop", path);
+    let Ok(content) = read_to_string(&file) else {
+        return
+    };
+
+    let desc_prefix: &str = "description=";
+    if content.contains(desc_prefix) {
+        let final_desc: String = format!("{}{}", desc_prefix, description.as_ref());
+        let data: String = content.lines().map(|line|
+            if line.starts_with(desc_prefix) {
+                &final_desc
+            } else {
+                line
+            }
+        ).intersperse("\n").collect();
+
+        write(file, data, false)
+    } else {
+        log::error("文件损坏")
+    }
 }
 
-pub fn override_description(path: &str, description: impl AsRef<str>) {
-    let full_path = format!("{}/module.prop", path);
-    let file = Path::new(&full_path);
-    if let Ok(content) = read_to_string(file) {
-        if content.contains(DESC_PREFIX) {
-            let final_desc: String = format!("{}{}", DESC_PREFIX, description.as_ref());
-            let data: String = content.lines().map(|line|
-                if line.starts_with(DESC_PREFIX) {
-                    &final_desc
-                } else {
-                    line
-                }
-            ).intersperse("\n").collect();
-            write(file, data, false)
-        } else {
-            log::error("文件损坏")
-        }
+pub fn create_file(path: impl AsRef<Path>) {
+    if let Err(error) = fs::File::create(path) {
+        log::error(format!("创建失败: {}", error))
     }
 }
 
 pub fn delete_file(path: impl AsRef<Path>) {
     fs::remove_file(path).ok();
+}
+
+pub fn setting_get_positive(setting_file: &str) -> ! {
+    if Path::new(setting_file).exists() {
+        process::exit(0)
+    } else {
+        process::exit(1)
+    }
 }
 
 pub fn print_cn(msg: impl Display) {

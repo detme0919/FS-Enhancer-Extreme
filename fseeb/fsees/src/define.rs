@@ -14,3 +14,8 @@
  */
 
 pub const LOG_TAG: &str = "daemon";
+
+pub const FSEEC: &str = "/data/adb/modules/fs_enhancer_extreme/bin/fseec";
+
+pub const SKIP_APPCHECK: &str = "/data/adb/fs_enhancer_extreme/config/setting/skip_appcheck";
+pub const SKIP_MODCHECK: &str = "/data/adb/fs_enhancer_extreme/config/setting/skip_modcheck";

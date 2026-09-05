@@ -16,8 +16,8 @@
 use crate::{
     util_functions::{
         getprop,
-        read_multiple_bool,
-        read_identity_string
+        read_to_string,
+        write
     },
     bridge,
     envcollect
@@ -59,117 +59,117 @@ pub const DEL_CONFLICT_MOD: &[&str] = &[
     "Yamabukiko"
 ];
 
+pub const MODULESDIR: &str = "/data/adb/modules";
+pub const MODULESUPDATEDIR: &str = "/data/adb/modules_update";
+
 pub const LOG_TAG: &str = "cli";
 pub const VERSION_NAME: &str = env!("VERSION_NAME");
 pub const BUILTIN_KEYBOX: &[u8] = include_bytes!("../asset/keybox.xml");
 
-pub const BLKSSZGET: libc::c_int = 0x1268u32 as libc::c_int;
-
-pub const OFF: &str = "OFF";
-pub const MULTIPLE: &str = "MULTIPLE";
+pub const DISABLE: &str = "Disable";
 pub const UNKNOWN: &str = "Unknown";
 
-pub const DESC_PREFIX: &str = "description=";
-pub const ABNORMAL_ENV: &str = "Abnormal Environment";
+pub const FORGE_STORE: &str = "ForgeStore";
+pub const TRICKY_STORE: &str = "TrickyStore";
+pub const OH_MY_KEYMINT: &str = "OhMyKeymint";
+pub const TEESIMULATOR: &str = "TEESimulator";
 
-pub const FS_STR: &str = "ForgeStore";
 pub const FSMODDIR: &str = "/data/adb/modules/forge_store";
 pub const TSMODDIR: &str = "/data/adb/modules/tricky_store";
-pub const FSEECONFIG: &str = "/data/adb/fs_enhancer_extreme/config";
+pub const OMKMODDIR: &str = "/data/adb/modules/oh_my_keymint";
+pub const TEESMODDIR: &str = "/data/adb/modules/teesim";
+
 pub const FSEEMODDIR: &str = "/data/adb/modules/fs_enhancer_extreme";
-pub const MODULESDIR: &str = "/data/adb/modules";
-pub const MODULESUPDATEDIR: &str = "/data/adb/modules_update";
-pub const ROOT_IMPL_ENV_FILE: &str = "/data/adb/fs_enhancer_extreme/root_impl";
+
 pub const MAIN_MODULE_ENV_FILE: &str = "/data/adb/fs_enhancer_extreme/main_module";
+pub const ROOT_IMPLEMENT_ENV_FILE: &str = "/data/adb/fs_enhancer_extreme/root_implement";
+
+pub const APPEND_FILE: &str = "/data/adb/fs_enhancer_extreme/config/append";
+pub const REMOVE_FILE: &str = "/data/adb/fs_enhancer_extreme/config/remove";
+pub const VBH_FILE: &str = "/data/adb/fs_enhancer_extreme/config/verifiedboothash";
+
+pub const BLACK_LIST: &str = "/data/adb/fs_enhancer_extreme/config/setting/blacklist";
+pub const FORCE_ENGLISH: &str = "/data/adb/fs_enhancer_extreme/config/setting/force_english";
+pub const SKIP_APPCHECK: &str = "/data/adb/fs_enhancer_extreme/config/setting/skip_appcheck";
+pub const SKIP_MODCHECK: &str = "/data/adb/fs_enhancer_extreme/config/setting/skip_modcheck";
+pub const SKIP_SPSYNC: &str = "/data/adb/fs_enhancer_extreme/config/setting/skip_spsync";
+pub const SKIP_VBHPASS: &str = "/data/adb/fs_enhancer_extreme/config/setting/skip_vbhpass";
+
+pub struct Environment {
+    pub multiple: bool,
+    pub identity: String,
+    pub version: u32
+}
+
+impl Environment {
+    pub fn export(env_file: &str, env: Environment) {
+        write(env_file, format!("{}\n{}\n{}", env.multiple, env.identity, env.version), false);
+
+        println!(
+            "{{Multiple: \"{}\", Identity: \"{}\", VersionCode: \"{}\"}}",
+            env.multiple, env.identity, env.version,
+        )
+    }
+    fn import(env_file: &str) -> Self {
+        let content = if let Ok(exists_continue) = read_to_string(env_file) {
+            exists_continue
+        } else {
+            envcollect::entry();
+            read_to_string(env_file).unwrap()
+        };
+
+        Self {
+            multiple: content.lines().nth(0)
+                .unwrap().parse()
+                .unwrap(),
+            identity: content.lines().nth(1)
+                .unwrap().to_string(),
+            version: content.lines().nth(2)
+                .unwrap().parse()
+                .unwrap()
+        }
+    }
+}
+
+pub static ROOT_IMPLEMENT: LazyLock<Environment> = LazyLock::new(||
+    Environment::import(ROOT_IMPLEMENT_ENV_FILE)
+);
+pub static MAIN_MODULE: LazyLock<Environment> = LazyLock::new(||
+    Environment::import(MAIN_MODULE_ENV_FILE)
+);
 
 pub static VERIFY: LazyLock<Option<bool>> = LazyLock::new(||
     bridge::verify()
 );
 
-pub static IS_ZHCN: LazyLock<bool> = LazyLock::new(||
-    !Path::new(&format!("{}/english", FSEECONFIG)).exists() && (getprop("persist.sys.locale").contains("zh") || getprop("ro.product.locale").contains("zh"))
+pub static ENV_ABNORMAL: LazyLock<bool> = LazyLock::new(||
+    *VERIFY == Some(false) || MAIN_MODULE.multiple || matches!(MAIN_MODULE.identity.as_str(), UNKNOWN | DISABLE | OH_MY_KEYMINT | TEESIMULATOR)
 );
 
-pub static MAIN_MODULE_IDENTITY: LazyLock<String> = LazyLock::new(||{
-    if !Path::new(MAIN_MODULE_ENV_FILE).exists() {
-        envcollect::entry()
-    }
-    let main_module_identity = read_identity_string(MAIN_MODULE_ENV_FILE);
-    let fs_disable = Path::new(&format!("{}/disable", FSMODDIR)).exists();
-    let ts_disable = Path::new(&format!("{}/disable", TSMODDIR)).exists();
-    if read_multiple_bool(MAIN_MODULE_ENV_FILE) {
-        if fs_disable && ts_disable {
-            String::from(OFF)
-        } else if !fs_disable && ts_disable {
-            String::from(FS_STR)
-        } else if fs_disable && !ts_disable {
-            main_module_identity
-                .rsplit('|').next().unwrap()
-                .split('(').next().unwrap()
-                .to_string()
-        } else {
-            String::from(MULTIPLE)
-        }
-    } else {
-        if fs_disable || ts_disable {
-            String::from(OFF)
-        } else {
-            main_module_identity
-        }
-    }
-});
-
-pub static ENV_NORMAL: LazyLock<bool> = LazyLock::new(||
-    !(*VERIFY == Some(false) || read_multiple_bool(ROOT_IMPL_ENV_FILE) || matches!(MAIN_MODULE_IDENTITY.as_str(), MULTIPLE | OFF))
-);
-
-pub static FINAL_NICE_NAME: LazyLock<&str> = LazyLock::new(||
-    match MAIN_MODULE_IDENTITY.as_str() {
-        "TEESimulator" | "TEESimulatorRS" => "TEESimulator",
-        other => other
-    }
-);
-pub static FINAL_MAIN_MODULE_DIR: LazyLock<&str> = LazyLock::new(||
-    if *MAIN_MODULE_IDENTITY != FS_STR {
-        TSMODDIR
-    } else {
-        FSMODDIR
-    }
-);
 pub static FINAL_MAIN_MODULE_CONFIG: LazyLock<&str> = LazyLock::new(||
-    if *MAIN_MODULE_IDENTITY != FS_STR {
-        "/data/adb/tricky_store"
-    } else {
+    if MAIN_MODULE.identity == FORGE_STORE {
         "/data/adb/forge_store"
+    } else {
+        "/data/adb/tricky_store"
     }
 );
 
-pub static CONFLICT_DESC_LINE: LazyLock<&str> = LazyLock::new(||
+pub static IS_ZHCN: LazyLock<bool> = LazyLock::new(||
+    !Path::new(FORCE_ENGLISH).exists() && (getprop("persist.sys.locale").contains("zh") || getprop("ro.product.locale").contains("zh"))
+);
+
+pub static DESC_CONFLICT_MOD: LazyLock<&str> = LazyLock::new(||
     if *IS_ZHCN {
         "此模块与 FS-Enhancer-Extreme 证实冲突, 已被添加移除标签, 将在设备下一次启动时被移除."
     } else {
         "This module has been confirmed to conflict with the FS-Enhancer-Extreme. Has been tagged for remove, Will be removed upon the devide next boot."
     }
 );
-
-pub static DESC_BASE: LazyLock<String> = LazyLock::new(||{
-    let final_identity: &str = if *ENV_NORMAL {
-        MAIN_MODULE_IDENTITY.as_str()
-    } else {
-        FS_STR
-    };
+pub static DESC_BASE: LazyLock<&str> = LazyLock::new(||
     if *IS_ZHCN {
-        format!("{} 增强, 极致隐藏由解锁引导加载程序产生的检测点.", final_identity)
+        "ForgeStore 增强, 极致隐藏由解锁引导加载程序产生的检测点."
     } else {
-        format!("Enhancer of {}, Extreme hiding of detection points from unlocking bootloader.", final_identity)
-    }
-});
-
-pub static DESC_MULTIPLE: LazyLock<&str> = LazyLock::new(||
-    if *IS_ZHCN {
-        "❌多重共存-"
-    } else {
-        "❌Multiple-"
+        "Enhancer of ForgeStore, Extreme hiding of detection points from unlocking bootloader."
     }
 );
 
@@ -180,6 +180,13 @@ pub static DESC_MAIN_MODULE_NOT_INSTALL: LazyLock<&str> = LazyLock::new(||
         "Not installed"
     }
 );
+pub static DESC_MULTIPLE_PREFIX: LazyLock<&str> = LazyLock::new(||
+    if *IS_ZHCN {
+        "多重共存"
+    } else {
+        "Multiple"
+    }
+);
 pub static DESC_DISABLE: LazyLock<&str> = LazyLock::new(||
     if *IS_ZHCN {
         "被禁用"
@@ -188,18 +195,18 @@ pub static DESC_DISABLE: LazyLock<&str> = LazyLock::new(||
     }
 );
 
-pub static DESC_ROOT_IMPL: LazyLock<&str> = LazyLock::new(||
-    if *IS_ZHCN {
-        "根实现: "
-    } else {
-        "Root: "
-    }
-);
 pub static DESC_MAIN_MODULE: LazyLock<&str> = LazyLock::new(||
     if *IS_ZHCN {
         "主模块: "
     } else {
         "MainModule: "
+    }
+);
+pub static DESC_ROOT_IMPL: LazyLock<&str> = LazyLock::new(||
+    if *IS_ZHCN {
+        "根实现: "
+    } else {
+        "RootImplement: "
     }
 );
 pub static DESC_INTEGRITY: LazyLock<&str> = LazyLock::new(||
@@ -238,6 +245,7 @@ pub static DESC_INTEGRITY_ERROR: LazyLock<&str> = LazyLock::new(||
         "Tampered with"
     }
 );
+
 pub static DESC_SERVICE_SUCCESS: LazyLock<&str> = LazyLock::new(||
     if *IS_ZHCN {
         "运行中"

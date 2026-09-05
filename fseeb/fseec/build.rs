@@ -2,8 +2,7 @@ use std::process;
 
 fn main() {
     let git_result = process::Command::new("git").args(["describe", "--tags", "--always"])
-        .output().ok()
-        .and_then(|output|
+        .output().ok().and_then(|output|
             String::from_utf8(output.stdout).ok()
         );
     let git_version: String = if let Some(success) = git_result {

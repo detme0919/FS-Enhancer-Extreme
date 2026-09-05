@@ -1,6 +1,6 @@
 import SEARCH from '../../svg/search_28_color.svg?raw'
 
-export async function entry(element: HTMLElement) {
+export function entry(element: HTMLElement) {
     const fluentTextInput: Element = element.nth(1).nth(1);
     fluentTextInput.setAttribute(
         'placeholder',

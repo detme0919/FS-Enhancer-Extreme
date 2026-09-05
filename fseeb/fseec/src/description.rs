@@ -15,22 +15,21 @@
 
 use crate::{
     define::{
-        OFF,
-        MULTIPLE,
+        DISABLE,
         UNKNOWN,
-        FS_STR,
+        OH_MY_KEYMINT,
+        TEESIMULATOR,
         FSEEMODDIR,
-        ROOT_IMPL_ENV_FILE,
-        MAIN_MODULE_ENV_FILE,
         VERIFY,
-        MAIN_MODULE_IDENTITY,
-        ENV_NORMAL,
+        ROOT_IMPLEMENT,
+        MAIN_MODULE,
+        ENV_ABNORMAL,
         DESC_BASE,
-        DESC_MULTIPLE,
         DESC_MAIN_MODULE_NOT_INSTALL,
+        DESC_MULTIPLE_PREFIX,
         DESC_DISABLE,
-        DESC_ROOT_IMPL,
         DESC_MAIN_MODULE,
+        DESC_ROOT_IMPL,
         DESC_INTEGRITY,
         DESC_SERVICE,
         DESC_INTEGRITY_SUCCESS,
@@ -42,9 +41,6 @@ use crate::{
     },
     util_functions::{
         pidof,
-        read_multiple_bool,
-        read_identity_string,
-        read_version_integer,
         override_description
     },
     bridge::log,
@@ -66,97 +62,74 @@ pub struct Mode {
 }
 
 pub fn refresh(mode: Mode) -> anyhow::Result<()> {
-    let base_path = Path::new(FSEEMODDIR);
-    if let Err(error) = try {
-        let data = fs::read(base_path.join("module.prop"))?;
-        if data.iter().all(|&bytes|
-            bytes == 0
-        ) {
-            fs::copy(base_path.join("other/module.base"), base_path.join("module.prop"))?;
-        }
-    } {
-        log::error(&format!("失败: {}", error));
-        panic!("失败: {}", error)
-    }
-
     if mode.debug {
         envcollect::entry()
     }
 
-    let full_environment: String = if !Path::new(&format!("{}/disable", FSEEMODDIR)).exists() {
-        let root_impl_identity = read_identity_string(ROOT_IMPL_ENV_FILE);
-        let (root_impl_prefix, root_impl_environment) = if read_multiple_bool(ROOT_IMPL_ENV_FILE) {
-            (*DESC_MULTIPLE, root_impl_identity)
+    let base_path = Path::new(FSEEMODDIR);
+    if let Err(error) = try {
+        let data = fs::read(base_path.join("module.prop"))?;
+        if data.iter().all(|bytes|
+            *bytes == 0
+        ) {
+            fs::copy(base_path.join("other/module.base"), base_path.join("module.prop"))?;
+        }
+    } {
+        log::error(format!("失败: {}", error));
+        panic!("失败: {}", error)
+    }
+
+    let full_environment: String = if Path::new(&format!("{}/disable", FSEEMODDIR)).exists() {
+        format!("❌{}", *DESC_DISABLE)
+    } else {
+        let (main_module_prefix, main_module_identity): (&str, &str) = if MAIN_MODULE.multiple {
+            ("❌", &format!("{} - {}", *DESC_MULTIPLE_PREFIX, MAIN_MODULE.identity))
+        } else if MAIN_MODULE.identity == UNKNOWN {
+            ("❌", *DESC_MAIN_MODULE_NOT_INSTALL)
+        } else if MAIN_MODULE.identity == DISABLE {
+            ("❌", *DESC_DISABLE)
         } else {
-            if root_impl_identity == UNKNOWN {
-                ("⚠️", root_impl_identity)
-            } else {
-                ("✅", format!("{}({})", root_impl_identity, read_version_integer(ROOT_IMPL_ENV_FILE)))
-            }
+            (
+                if matches!(MAIN_MODULE.identity.as_str(), OH_MY_KEYMINT | TEESIMULATOR) {
+                    "❌"
+                } else {
+                    "✅"
+                },
+                &format!("{} ({})", MAIN_MODULE.identity, MAIN_MODULE.version)
+            )
         };
 
-        let main_module_identity = read_identity_string(MAIN_MODULE_ENV_FILE);
-        let (main_module_prefix, main_module_environment): (_, &str) = if read_multiple_bool(MAIN_MODULE_ENV_FILE) {
-            if *MAIN_MODULE_IDENTITY == MULTIPLE {
-                (*DESC_MULTIPLE, &main_module_identity)
-            } else {
-                if *MAIN_MODULE_IDENTITY == OFF {
-                    ("❌", *DESC_DISABLE)
-                } else {
-                    if *MAIN_MODULE_IDENTITY == FS_STR {
-                        ("✅", &main_module_identity
-                            .split('|').next()
-                            .unwrap())
-                    } else {
-                        ("✅", &main_module_identity
-                            .rsplit('|').next()
-                            .unwrap())
-                    }
-                }
-            }
+        let (root_implement_prefix, root_implement_identity): (&str, &String) = if ROOT_IMPLEMENT.multiple {
+            ("❌", &format!("{} - {}", *DESC_MULTIPLE_PREFIX, ROOT_IMPLEMENT.identity))
+        } else if ROOT_IMPLEMENT.identity == UNKNOWN {
+            ("⚠️", &ROOT_IMPLEMENT.identity)
         } else {
-            if *MAIN_MODULE_IDENTITY == UNKNOWN {
-                ("❌", *DESC_MAIN_MODULE_NOT_INSTALL)
-            } else {
-                if *MAIN_MODULE_IDENTITY == OFF {
-                    ("❌", *DESC_DISABLE)
-                } else {
-                    ("✅", &format!("{}({})", main_module_identity, read_version_integer(MAIN_MODULE_ENV_FILE)))
-                }
-            }
+            ("✅", &format!("{} ({})", ROOT_IMPLEMENT.identity, ROOT_IMPLEMENT.version))
         };
 
         let (integrity_prefix, integrity_state) = match *VERIFY {
-            Some(true) => {
-                ("✅", *DESC_INTEGRITY_SUCCESS)
-            }
-            Some(false) => {
-                ("❌", *DESC_INTEGRITY_ERROR)
-            }
-            None => {
-                ("⚠️", *DESC_INTEGRITY_WARNING)
-            }
+            Some(true) => ("✅", *DESC_INTEGRITY_SUCCESS),
+            Some(false) => ("❌", *DESC_INTEGRITY_ERROR),
+            None => ("⚠️", *DESC_INTEGRITY_WARNING)
         };
 
-        let (daemon_prefix, daemon_state) = if *ENV_NORMAL {
-            if let None = pidof("fsees") {
+        let (daemon_prefix, daemon_state) = if *ENV_ABNORMAL {
+            ("❌", *DESC_SERVICE_NOT_START)
+        } else {
+            if pidof("fsees") == None {
                 ("❌", *DESC_SERVICE_FAILURE)
             } else {
                 ("✅", *DESC_SERVICE_SUCCESS)
             }
-        } else {
-            ("❌", *DESC_SERVICE_NOT_START)
         };
 
         format!(
             "{}{}{}, {}{}{}, {}{}{}, {}{}{}",
-            *DESC_MAIN_MODULE, main_module_prefix, main_module_environment,
-            *DESC_ROOT_IMPL, root_impl_prefix, root_impl_environment,
+            *DESC_MAIN_MODULE, main_module_prefix, main_module_identity,
+            *DESC_ROOT_IMPL, root_implement_prefix, root_implement_identity,
             *DESC_INTEGRITY, integrity_prefix, integrity_state,
             *DESC_SERVICE, daemon_prefix, daemon_state
         )
-    } else {
-        format!("❌{}", *DESC_DISABLE)
     };
 
     override_description(FSEEMODDIR, format!("[{}] {}", full_environment, *DESC_BASE));
